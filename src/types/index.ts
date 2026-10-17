@@ -33,6 +33,7 @@ export interface PrintJob {
   copies: number;
   colorMode: 'bw' | 'color';
   paperSize: 'A4' | 'A3' | 'Letter';
+  paperType?: 'plain' | 'photo';
   orientation: 'portrait' | 'landscape';
   sides: 'single' | 'double';
   binding: 'none' | 'staple' | 'spiral' | 'hardcover';

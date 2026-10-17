@@ -442,8 +442,10 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
                   <div className="p-4 sm:p-5 bg-white border-t border-[#edebe9] text-xs space-y-4">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="p-2.5 bg-[#f3f2f1] border border-[#e1dfdd] rounded-[2px]">
-                        <span className="text-[#605e5c] block text-[11px]">Paper Size & Format</span>
-                        <span className="font-semibold text-[#242424] capitalize">{job.paperSize} ({job.orientation})</span>
+                        <span className="text-[#605e5c] block text-[11px]">Paper & Media</span>
+                        <span className="font-semibold text-[#242424] capitalize">
+                          {job.paperSize} ({job.paperType === 'photo' ? 'Photo Paper' : 'Plain Paper'})
+                        </span>
                       </div>
                       <div className="p-2.5 bg-[#f3f2f1] border border-[#e1dfdd] rounded-[2px]">
                         <span className="text-[#605e5c] block text-[11px]">Binding Finish</span>

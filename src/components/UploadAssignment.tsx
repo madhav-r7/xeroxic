@@ -31,6 +31,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
   const [copies, setCopies] = useState<number>(1);
   const [sides, setSides] = useState<'single' | 'double'>('double');
   const [paperSize, setPaperSize] = useState<'A4' | 'A3' | 'Letter'>('A4');
+  const [paperType, setPaperType] = useState<'plain' | 'photo'>('plain');
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const [binding, setBinding] = useState<'none' | 'staple' | 'spiral' | 'hardcover'>('staple');
   const [isUrgent, setIsUrgent] = useState(false);
@@ -43,12 +44,14 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
   const paperMultiplier = paperSize === 'A3' ? 2 : 1;
   const pagesCost = pageCount * copies * perPageRate * paperMultiplier;
 
+  const photoPaperFee = paperType === 'photo' ? 15 * copies : 0;
+
   let bindingCost = 0;
   if (binding === 'spiral') bindingCost = 25;
   if (binding === 'hardcover') bindingCost = 120;
 
   const urgentFee = isUrgent ? 10 : 0;
-  const totalCost = pagesCost + bindingCost + urgentFee;
+  const totalCost = pagesCost + photoPaperFee + bindingCost + urgentFee;
 
   // File drop & selection handlers
   const handleDrag = (e: React.DragEvent) => {
@@ -120,6 +123,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
         copies: copies,
         colorMode: colorMode,
         paperSize: paperSize,
+        paperType: paperType,
         orientation: orientation,
         sides: sides,
         binding: binding,
@@ -192,6 +196,10 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               <div className="bg-white p-2 border border-[#e1dfdd]">
                 <span className="text-[#605e5c] block">Print Mode:</span>
                 <span className="font-medium">{successJob.colorMode === 'color' ? 'Color' : 'B&W'} ({successJob.sides})</span>
+              </div>
+              <div className="bg-white p-2 border border-[#e1dfdd]">
+                <span className="text-[#605e5c] block">Paper Type:</span>
+                <span className="font-medium">{successJob.paperType === 'photo' ? 'Photo Paper (+₹15)' : 'Plain Paper'}</span>
               </div>
               <div className="bg-white p-2 border border-[#e1dfdd]">
                 <span className="text-[#605e5c] block">Binding:</span>
@@ -385,6 +393,46 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                       <div className="text-xs font-bold text-[#0067b8] mt-1">₹10.00 / page</div>
                     </div>
                     {colorMode === 'color' && <Check className="w-4 h-4 text-[#0067b8]" />}
+                  </div>
+                </div>
+              </div>
+
+              {/* Paper Type: Plain vs Photo Paper */}
+              <div>
+                <label className="block text-xs font-semibold text-[#242424] mb-2">
+                  Paper Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div
+                    onClick={() => setPaperType('plain')}
+                    className={`p-3 rounded-[3px] border cursor-pointer transition-all flex items-start justify-between ${
+                      paperType === 'plain'
+                        ? 'border-[#0067b8] bg-[#e6f2fb]/50 ring-1 ring-[#0067b8]'
+                        : 'border-[#edebe9] hover:border-[#a19f9d] bg-white'
+                    }`}
+                  >
+                    <div>
+                      <div className="text-xs font-semibold text-[#242424]">Plain Paper</div>
+                      <div className="text-[11px] text-[#605e5c] mt-0.5">Standard 75 GSM paper</div>
+                      <div className="text-xs font-bold text-[#107c10] mt-1">Included (Standard)</div>
+                    </div>
+                    {paperType === 'plain' && <Check className="w-4 h-4 text-[#0067b8]" />}
+                  </div>
+
+                  <div
+                    onClick={() => setPaperType('photo')}
+                    className={`p-3 rounded-[3px] border cursor-pointer transition-all flex items-start justify-between ${
+                      paperType === 'photo'
+                        ? 'border-[#0067b8] bg-[#e6f2fb]/50 ring-1 ring-[#0067b8]'
+                        : 'border-[#edebe9] hover:border-[#a19f9d] bg-white'
+                    }`}
+                  >
+                    <div>
+                      <div className="text-xs font-semibold text-[#242424]">Photo Paper</div>
+                      <div className="text-[11px] text-[#605e5c] mt-0.5">Glossy high-resolution finish</div>
+                      <div className="text-xs font-bold text-[#0067b8] mt-1">+₹15.00</div>
+                    </div>
+                    {paperType === 'photo' && <Check className="w-4 h-4 text-[#0067b8]" />}
                   </div>
                 </div>
               </div>
@@ -591,6 +639,12 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                   <span>Printing ({pageCount} pgs × {copies} set × ₹{perPageRate})</span>
                   <span className="font-medium text-[#242424]">₹{pagesCost}.00</span>
                 </div>
+                {photoPaperFee > 0 && (
+                  <div className="flex justify-between text-[#605e5c]">
+                    <span>Photo Paper Finish</span>
+                    <span className="font-medium text-[#242424]">₹{photoPaperFee}.00</span>
+                  </div>
+                )}
                 {bindingCost > 0 && (
                   <div className="flex justify-between text-[#605e5c]">
                     <span className="capitalize">{binding} Binding</span>

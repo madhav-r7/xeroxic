@@ -62,31 +62,36 @@ export const RateCard: React.FC = () => {
         </div>
       </div>
 
-      {/* Binding & Finishing */}
+      {/* Paper Types & Finishing */}
       <div className="bg-white border border-[#e1dfdd] rounded-[2px] shadow-sm overflow-hidden">
         <div className="px-5 py-3.5 bg-[#f3f2f1] border-b border-[#e1dfdd]">
-          <h2 className="text-sm font-semibold text-[#242424]">Binding & Finishing Charges</h2>
+          <h2 className="text-sm font-semibold text-[#242424]">Paper Options & Finishing Charges</h2>
         </div>
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs">
           <div className="p-3 border border-[#e1dfdd] rounded-[2px] bg-[#faf9f8]">
-            <div className="font-semibold text-[#242424]">Corner Stapling</div>
+            <div className="font-semibold text-[#242424]">Plain Paper</div>
+            <div className="text-[11px] text-[#605e5c] mt-0.5">Standard 75 GSM multipurpose</div>
+            <div className="text-sm font-bold text-[#107c10] mt-2">Included</div>
+          </div>
+          <div className="p-3 border border-[#0067b8]/40 rounded-[2px] bg-[#eff6fc]/40">
+            <div className="font-semibold text-[#0067b8]">Photo Paper</div>
+            <div className="text-[11px] text-[#605e5c] mt-0.5">Glossy high-resolution finish</div>
+            <div className="text-sm font-bold text-[#0067b8] mt-2">+₹15.00</div>
+          </div>
+          <div className="p-3 border border-[#e1dfdd] rounded-[2px] bg-[#faf9f8]">
+            <div className="font-semibold text-[#242424]">Corner Staple</div>
             <div className="text-[11px] text-[#605e5c] mt-0.5">Top-left corner staple</div>
             <div className="text-sm font-bold text-[#107c10] mt-2">Free</div>
           </div>
           <div className="p-3 border border-[#e1dfdd] rounded-[2px] bg-[#faf9f8]">
             <div className="font-semibold text-[#242424]">Spiral Binding</div>
-            <div className="text-[11px] text-[#605e5c] mt-0.5">Includes transparent front & black back cover</div>
-            <div className="text-sm font-bold text-[#0067b8] mt-2">₹25.00 / set</div>
+            <div className="text-[11px] text-[#605e5c] mt-0.5">Clear front & black back cover</div>
+            <div className="text-sm font-bold text-[#0067b8] mt-2">₹25.00</div>
           </div>
           <div className="p-3 border border-[#e1dfdd] rounded-[2px] bg-[#faf9f8]">
             <div className="font-semibold text-[#242424]">Hardcover Book</div>
-            <div className="text-[11px] text-[#605e5c] mt-0.5">Final year major project report binding</div>
-            <div className="text-sm font-bold text-[#0067b8] mt-2">₹120.00 / copy</div>
-          </div>
-          <div className="p-3 border border-[#e1dfdd] rounded-[2px] bg-[#faf9f8]">
-            <div className="font-semibold text-[#242424]">Lamination</div>
-            <div className="text-[11px] text-[#605e5c] mt-0.5">Protective plastic coating</div>
-            <div className="text-sm font-bold text-[#0067b8] mt-2">₹15.00 / sheet</div>
+            <div className="text-[11px] text-[#605e5c] mt-0.5">Final year major project report</div>
+            <div className="text-sm font-bold text-[#0067b8] mt-2">₹120.00</div>
           </div>
         </div>
       </div>

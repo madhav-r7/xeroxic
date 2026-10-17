@@ -155,6 +155,7 @@ Each order card in the tracker must feature a horizontal 4-step progress line:
     - Page Count Selector: Auto-inferred with manual +/- override.
     - Number of Copies: Stepper control (Min: 1, Max: 50).
     - Color Option: Black & White (₹2/page) vs. Color (₹10/page).
+    - Paper Type Option: Plain Paper (Standard 75 GSM - Free) vs. Photo Paper (Glossy High-Res Finish - +₹15/set).
     - Paper Size: A4 (Standard), A3 (Engineering Drawing), Letter.
     - Print Sides: Double-sided (Eco, recommended) vs. Single-sided.
     - Orientation: Portrait vs. Landscape.
@@ -165,6 +166,7 @@ Each order card in the tracker must feature a horizontal 4-step progress line:
     - **Real-Time Cost Breakdown Card:**
       - Pages calculation: `Pages × Copies × Rate`
       - Paper multiplier: `1x for A4, 2x for A3`
+      - Paper Type fee: `+₹15 for Photo Paper`
       - Binding fee itemized
       - Urgent priority fee itemized
       - **Grand Total (₹):** Displayed in large, bold font.

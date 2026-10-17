@@ -257,7 +257,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                       <div className="font-medium text-[#242424] truncate max-w-[200px]" title={job.fileName}>
                         {job.fileName}
                       </div>
-                      <div className="text-[11px] text-[#605e5c] mt-0.5 flex items-center space-x-1.5">
+                      <div className="text-[11px] text-[#605e5c] mt-0.5 flex flex-wrap items-center gap-1.5">
                         <span className="font-semibold text-[#0067b8]">{job.pageCount} pgs</span>
                         <span>×</span>
                         <span className="font-semibold">{job.copies} copy</span>
@@ -265,6 +265,11 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                         <span className="capitalize">{job.colorMode === 'color' ? 'Color' : 'B&W'}</span>
                         <span>•</span>
                         <span>{job.sides === 'double' ? 'Duplex' : 'Single'}</span>
+                        {job.paperType === 'photo' && (
+                          <span className="text-[10px] bg-[#e6f2fb] text-[#0067b8] font-bold px-1.5 py-0.5 rounded border border-[#cbe4f9]">
+                            PHOTO PAPER
+                          </span>
+                        )}
                       </div>
                       {job.instructions && (
                         <div className="text-[10px] text-[#d83b01] font-medium mt-1 truncate max-w-[200px]" title={job.instructions}>
@@ -424,6 +429,10 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                 <div className="p-2 border border-[#e1dfdd]">
                   <span className="text-[#605e5c] block">Paper Size:</span>
                   <span className="font-semibold">{selectedJob.paperSize}</span>
+                </div>
+                <div className="p-2 border border-[#e1dfdd]">
+                  <span className="text-[#605e5c] block">Paper Type:</span>
+                  <span className="font-semibold">{selectedJob.paperType === 'photo' ? 'Photo Paper (+₹15)' : 'Plain Paper'}</span>
                 </div>
                 <div className="p-2 border border-[#e1dfdd]">
                   <span className="text-[#605e5c] block">Binding:</span>
