@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PrintJob, User } from '../types';
+import { soundManager } from '../utils/audio';
 import {
   Clock,
   Printer,
@@ -12,7 +13,10 @@ import {
   ChevronUp,
   RefreshCw,
   Copy,
-  Check
+  Check,
+  Bell,
+  ExternalLink,
+  Download
 } from 'lucide-react';
 
 interface TrackPrintingProps {
@@ -32,11 +36,32 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [readyAlertMsg, setReadyAlertMsg] = useState<string | null>(null);
 
   // Student should see their own jobs
   const studentJobs = jobs.filter(
     (j) => j.studentId === user.id || j.studentRoll === user.studentId
   );
+
+  // Sound chime when operator marks an order as ready
+  const knownReadyRef = useRef<Set<string>>(
+    new Set(studentJobs.filter((j) => j.status === 'ready').map((j) => j.id))
+  );
+
+  useEffect(() => {
+    const currentReady = studentJobs.filter((j) => j.status === 'ready');
+    const newlyReady = currentReady.filter((j) => !knownReadyRef.current.has(j.id));
+
+    if (newlyReady.length > 0) {
+      soundManager.playReadyChime();
+      setReadyAlertMsg(
+        `🎉 Great news! Your order ${newlyReady[0].id} (${newlyReady[0].fileName}) is printed and READY at ${newlyReady[0].pickupCounter}!`
+      );
+      setTimeout(() => setReadyAlertMsg(null), 10000);
+    }
+
+    knownReadyRef.current = new Set(currentReady.map((j) => j.id));
+  }, [studentJobs]);
 
   const filteredJobs = studentJobs.filter((job) => {
     const matchesQuery =
@@ -136,6 +161,22 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Live Ready Alert Banner */}
+      {readyAlertMsg && (
+        <div className="mb-4 p-4 bg-[#dff6dd] text-[#107c10] border-2 border-[#107c10] rounded-[4px] text-xs font-semibold flex items-center justify-between shadow animate-bounce">
+          <div className="flex items-center space-x-2.5">
+            <Bell className="w-5 h-5 text-[#107c10] shrink-0" />
+            <span className="text-sm">{readyAlertMsg}</span>
+          </div>
+          <button
+            onClick={() => setReadyAlertMsg(null)}
+            className="text-xs text-[#107c10] hover:underline font-bold px-2 py-1"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Quick Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">

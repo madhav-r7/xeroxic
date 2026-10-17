@@ -211,6 +211,192 @@ export async function syncJobsFromSupabase(): Promise<PrintJob[]> {
   return getStoredJobs();
 }
 
+const STORAGE_KEY_REGISTERED_USERS = 'xeroxic_registered_accounts_v1';
+const STORAGE_KEY_REMEMBERED_LOGIN = 'xeroxic_remembered_login_v1';
+
+export interface RegisteredAccount {
+  id: string;
+  name: string;
+  rollNumber: string;
+  email: string;
+  phone?: string;
+  department?: string;
+  password: string;
+  createdAt: string;
+}
+
+export const ADMIN_CREDENTIALS = {
+  username: 'admin',
+  email: 'admin@college.edu',
+  password: 'admin@123',
+};
+
+const DEFAULT_ACCOUNTS: RegisteredAccount[] = [
+  {
+    id: 'usr-student-01',
+    name: 'Rohan Sharma',
+    rollNumber: '2024CS1092',
+    email: 'student@college.edu',
+    phone: '+91 98765 43210',
+    department: 'Computer Science & Engineering',
+    password: 'student123',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'usr-student-02',
+    name: 'Sumit Jangra',
+    rollNumber: '2024CS1001',
+    email: 'sumit@college.edu',
+    phone: '+91 98765 00000',
+    department: 'Computer Science & Engineering',
+    password: 'student123',
+    createdAt: new Date().toISOString(),
+  },
+];
+
+export function getRegisteredAccounts(): RegisteredAccount[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_REGISTERED_USERS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEY_REGISTERED_USERS, JSON.stringify(DEFAULT_ACCOUNTS));
+      return DEFAULT_ACCOUNTS;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem(STORAGE_KEY_REGISTERED_USERS, JSON.stringify(DEFAULT_ACCOUNTS));
+      return DEFAULT_ACCOUNTS;
+    }
+    return parsed;
+  } catch {
+    return DEFAULT_ACCOUNTS;
+  }
+}
+
+export function registerStudentAccount(
+  data: Omit<RegisteredAccount, 'id' | 'createdAt'>
+): { success: boolean; message?: string; account?: RegisteredAccount } {
+  try {
+    const accounts = getRegisteredAccounts();
+    const cleanRoll = data.rollNumber.trim().toUpperCase();
+    const cleanEmail = data.email.trim().toLowerCase();
+
+    // Check if roll or email already exists
+    const duplicate = accounts.find(
+      (a) =>
+        a.rollNumber.toUpperCase() === cleanRoll ||
+        a.email.toLowerCase() === cleanEmail
+    );
+
+    if (duplicate) {
+      return {
+        success: false,
+        message: 'An account with this Roll Number or Email already exists. Please Sign In.',
+      };
+    }
+
+    const newAccount: RegisteredAccount = {
+      id: 'usr-student-' + Date.now(),
+      name: data.name.trim(),
+      rollNumber: cleanRoll,
+      email: cleanEmail,
+      phone: data.phone?.trim() || '+91 98765 43210',
+      department: data.department?.trim() || 'Campus Student',
+      password: data.password.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    const updated = [newAccount, ...accounts];
+    localStorage.setItem(STORAGE_KEY_REGISTERED_USERS, JSON.stringify(updated));
+    return { success: true, account: newAccount };
+  } catch (e: any) {
+    return { success: false, message: e.message || 'Error creating account.' };
+  }
+}
+
+export function verifyStudentLogin(
+  identifier: string,
+  passwordInput: string
+): { success: boolean; message?: string; user?: User } {
+  const accounts = getRegisteredAccounts();
+  const cleanId = identifier.trim().toLowerCase();
+
+  const matched = accounts.find(
+    (a) =>
+      a.rollNumber.toLowerCase() === cleanId ||
+      a.email.toLowerCase() === cleanId
+  );
+
+  if (!matched) {
+    return {
+      success: false,
+      message: 'No registered student account found for this Roll Number or Email. Please Sign Up first.',
+    };
+  }
+
+  if (matched.password !== passwordInput.trim()) {
+    return {
+      success: false,
+      message: 'Incorrect password. Please verify and try again.',
+    };
+  }
+
+  const user: User = {
+    id: matched.id,
+    name: matched.name,
+    email: matched.email,
+    role: 'student',
+    studentId: matched.rollNumber,
+    department: matched.department,
+    phone: matched.phone,
+    balance: 350,
+  };
+
+  return { success: true, user };
+}
+
+export function verifyAdminLogin(
+  identifier: string,
+  passwordInput: string
+): { success: boolean; message?: string; user?: User } {
+  const cleanId = identifier.trim().toLowerCase();
+  const validUsernames = ['admin', 'admin@college.edu', 'admin@xeroxic.edu'];
+
+  if (!validUsernames.includes(cleanId)) {
+    return {
+      success: false,
+      message: 'Invalid admin username or email. (Admin ID: admin)',
+    };
+  }
+
+  if (passwordInput.trim() !== ADMIN_CREDENTIALS.password) {
+    return {
+      success: false,
+      message: 'Incorrect admin password. (Hint: admin@123)',
+    };
+  }
+
+  return { success: true, user: DEMO_ADMIN };
+}
+
+export function getRememberedLogin(): { identifier: string; isAdmin: boolean } | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_REMEMBERED_LOGIN);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function saveRememberedLogin(identifier: string, isAdmin: boolean = false): void {
+  try {
+    localStorage.setItem(
+      STORAGE_KEY_REMEMBERED_LOGIN,
+      JSON.stringify({ identifier, isAdmin })
+    );
+  } catch {}
+}
+
 export function getStoredUser(): User | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_USER);

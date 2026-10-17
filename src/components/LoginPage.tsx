@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../types';
-import { DEMO_ADMIN } from '../services/storage';
-import { ArrowRight, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import {
+  verifyStudentLogin,
+  verifyAdminLogin,
+  registerStudentAccount,
+  getRememberedLogin,
+  saveRememberedLogin,
+  ADMIN_CREDENTIALS,
+  getRegisteredAccounts
+} from '../services/storage';
+import { ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
@@ -17,6 +25,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
   const [step, setStep] = useState<'username' | 'password'>('username');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Sign Up state
   const [signupName, setSignupName] = useState('');
@@ -24,12 +33,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPhone, setSignupPhone] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
+  const [signupDepartment, setSignupDepartment] = useState('Computer Science & Engineering');
+
+  // Load remembered credentials on mount
+  useEffect(() => {
+    const remembered = getRememberedLogin();
+    if (remembered && remembered.identifier) {
+      setUsernameOrEmail(remembered.identifier);
+      if (remembered.isAdmin) {
+        setIsAdminMode(true);
+      }
+    }
+  }, []);
 
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+    setSuccessMessage('');
 
-    const input = usernameOrEmail.trim().toLowerCase();
+    const input = usernameOrEmail.trim();
     if (!input) {
       setErrorMessage(
         isAdminMode
@@ -39,9 +61,29 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
       return;
     }
 
-    if (input === 'admin' || input.includes('admin')) {
-      setIsAdminMode(true);
+    if (isAdminMode) {
+      const lower = input.toLowerCase();
+      if (lower !== 'admin' && lower !== 'admin@college.edu' && lower !== 'admin@xeroxic.edu') {
+        setErrorMessage('Invalid admin username. Please enter "admin".');
+        return;
+      }
       setStep('password');
+      return;
+    }
+
+    // Student: Verify that the account actually exists in registered accounts!
+    const accounts = getRegisteredAccounts();
+    const cleanId = input.toLowerCase();
+    const exists = accounts.some(
+      (a) =>
+        a.rollNumber.toLowerCase() === cleanId ||
+        a.email.toLowerCase() === cleanId
+    );
+
+    if (!exists) {
+      setErrorMessage(
+        `No registered account found for "${input}". You must create an account in the "Sign Up" tab first.`
+      );
       return;
     }
 
@@ -50,40 +92,74 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    if (!password.trim()) {
+      setErrorMessage('Please enter your password.');
+      return;
+    }
+
     if (isAdminMode) {
-      onLogin(DEMO_ADMIN);
+      const res = verifyAdminLogin(usernameOrEmail, password);
+      if (!res.success) {
+        setErrorMessage(res.message || 'Incorrect admin password.');
+        return;
+      }
+      saveRememberedLogin(usernameOrEmail.trim(), true);
+      if (res.user) onLogin(res.user);
     } else {
-      const trimmed = usernameOrEmail.trim();
-      const studentUser: User = {
-        id: 'usr-' + Date.now(),
-        name: trimmed.includes('@') ? trimmed.split('@')[0] : trimmed,
-        role: 'student',
-        studentId: trimmed || '250222',
-        department: 'College Campus',
-        email: trimmed.includes('@') ? trimmed : `${trimmed.toLowerCase()}@college.edu`,
-        phone: '+91 98765 43210',
-      };
-      onLogin(studentUser);
+      const res = verifyStudentLogin(usernameOrEmail, password);
+      if (!res.success) {
+        setErrorMessage(res.message || 'Incorrect password.');
+        return;
+      }
+      saveRememberedLogin(usernameOrEmail.trim().toUpperCase(), false);
+      if (res.user) onLogin(res.user);
     }
   };
 
   const handleSignUpSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+    setSuccessMessage('');
 
     if (!signupName.trim() || !signupRoll.trim() || !signupEmail.trim() || !signupPassword.trim()) {
       setErrorMessage('Please fill in all required fields.');
       return;
     }
 
-    const newUser: User = {
-      id: 'usr-student-' + Date.now(),
+    if (signupPassword.length < 4) {
+      setErrorMessage('Password must be at least 4 characters long.');
+      return;
+    }
+
+    const res = registerStudentAccount({
       name: signupName.trim(),
-      role: 'student',
-      studentId: signupRoll.trim().toUpperCase(),
-      department: 'Campus Student',
+      rollNumber: signupRoll.trim(),
       email: signupEmail.trim(),
-      phone: signupPhone.trim() || '+91 98765 43210',
+      phone: signupPhone.trim(),
+      department: signupDepartment.trim(),
+      password: signupPassword.trim(),
+    });
+
+    if (!res.success) {
+      setErrorMessage(res.message || 'Could not register account.');
+      return;
+    }
+
+    // Account created successfully! Save remembered roll number and log in directly
+    saveRememberedLogin(signupRoll.trim().toUpperCase(), false);
+
+    const newUser: User = {
+      id: res.account!.id,
+      name: res.account!.name,
+      email: res.account!.email,
+      role: 'student',
+      studentId: res.account!.rollNumber,
+      department: res.account!.department,
+      phone: res.account!.phone,
+      balance: 350,
     };
 
     onLogin(newUser);
@@ -92,7 +168,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
   return (
     <div className="min-h-screen bg-[#f3f6fa] flex flex-col justify-center items-center py-10 px-4 font-segoe select-none">
       {/* Main Card */}
-      <div className="relative w-full max-w-[440px] bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-[#e5e7eb] p-8 sm:p-10 text-left my-auto">
+      <div className="relative w-full max-w-[460px] bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-[#e5e7eb] p-8 sm:p-10 text-left my-auto">
         {/* Top-left back arrow inside the card */}
         {onCancel && (
           <button
@@ -118,17 +194,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
 
           <h1 className="text-2xl font-semibold text-[#111827] tracking-tight mt-6">
             {isAdminMode
-              ? 'Admin login'
+              ? 'Admin Login'
               : authMode === 'signup'
-              ? 'Create student account'
-              : 'Sign in'}
+              ? 'Create Student Account'
+              : 'Sign in to Xeroxic'}
           </h1>
           <p className="text-xs text-[#6b7280] mt-1">
             {isAdminMode
-              ? 'Access central xerox operator desk'
+              ? 'Access Xerox operator print desk & live queue'
               : authMode === 'signup'
-              ? 'Register with your college roll number to upload assignments'
-              : 'Access your campus printing portal'}
+              ? 'Register once with your college roll number to upload assignments'
+              : 'Enter your registered roll number or email'}
           </p>
         </div>
 
@@ -139,7 +215,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
               type="button"
               onClick={() => {
                 setAuthMode('signin');
+                setStep('username');
                 setErrorMessage('');
+                setSuccessMessage('');
               }}
               className={`flex-1 pb-2.5 text-xs font-semibold text-center transition-colors border-b-2 ${
                 authMode === 'signin'
@@ -154,6 +232,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
               onClick={() => {
                 setAuthMode('signup');
                 setErrorMessage('');
+                setSuccessMessage('');
               }}
               className={`flex-1 pb-2.5 text-xs font-semibold text-center transition-colors border-b-2 ${
                 authMode === 'signup'
@@ -161,14 +240,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                   : 'border-transparent text-[#6b7280] hover:text-[#111827]'
               }`}
             >
-              Sign Up
+              Sign Up (Register First)
             </button>
           </div>
         )}
 
+        {/* Error / Success Feedback */}
         {errorMessage && (
-          <div className="mt-4 p-2.5 text-xs bg-[#fed9cc] text-[#d83b01] rounded-md font-medium">
-            {errorMessage}
+          <div className="mt-4 p-3 text-xs bg-[#fed9cc] text-[#d83b01] rounded-md font-medium flex items-start space-x-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mt-4 p-3 text-xs bg-[#dff6dd] text-[#107c10] rounded-md font-medium flex items-start space-x-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{successMessage}</span>
           </div>
         )}
 
@@ -178,7 +266,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
             <form onSubmit={handleNext} className="mt-5 space-y-4">
               <div>
                 <label className="block text-xs font-medium text-[#374151] mb-1.5">
-                  {isAdminMode ? 'Admin username or email' : 'Roll number or email'}
+                  {isAdminMode ? 'Admin Username or Email' : 'Roll Number or College Email'}
                 </label>
                 <input
                   type="text"
@@ -187,27 +275,60 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                   onChange={(e) => setUsernameOrEmail(e.target.value)}
                   placeholder={
                     isAdminMode
-                      ? 'admin or admin@college.edu'
-                      : 'e.g. 250222 or student@college.edu'
+                      ? 'admin'
+                      : 'e.g. 2024CS1092 or student@college.edu'
                   }
                   className="w-full px-3.5 py-2.5 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
                 />
               </div>
 
-              {/* Admin login aligned to the right */}
-              <div className="flex items-center justify-end pt-1">
+              {/* Toggle Admin / Student login on the right */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] text-[#6b7280]">
+                  {isAdminMode ? 'Operator Portal' : 'Student Access'}
+                </span>
                 <button
                   type="button"
                   onClick={() => {
-                    setIsAdminMode(!isAdminMode);
-                    setUsernameOrEmail('');
+                    const nextMode = !isAdminMode;
+                    setIsAdminMode(nextMode);
+                    setUsernameOrEmail(nextMode ? 'admin' : '');
                     setStep('username');
                     setErrorMessage('');
+                    setSuccessMessage('');
                   }}
-                  className="text-xs text-[#0062e0] hover:underline font-medium"
+                  className="text-xs text-[#0062e0] hover:underline font-semibold"
                 >
-                  {isAdminMode ? 'Student login' : 'Admin login'}
+                  {isAdminMode ? '← Back to Student Login' : 'Admin Login →'}
                 </button>
+              </div>
+
+              {/* Preset credentials note */}
+              <div className="p-2.5 bg-[#f9fafb] border border-[#e5e7eb] rounded-md text-[11px] text-[#6b7280] space-y-1">
+                {isAdminMode ? (
+                  <div className="flex items-center space-x-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#0062e0] shrink-0" />
+                    <span>
+                      Fixed Admin: ID: <strong className="text-[#111827]">admin</strong> | Password: <strong className="text-[#111827]">admin@123</strong>
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span>
+                      Demo Student: <strong className="text-[#111827]">2024CS1092</strong> (Pass: <strong className="text-[#111827]">student123</strong>)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode('signup');
+                        setErrorMessage('');
+                      }}
+                      className="text-[#0062e0] hover:underline font-semibold"
+                    >
+                      New user? Sign Up
+                    </button>
+                  </div>
+                )}
               </div>
 
               <button
@@ -223,14 +344,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium text-[#374151]">
-                    Enter password
+                    Enter Password for <span className="font-semibold text-[#111827]">{usernameOrEmail}</span>
                   </label>
                   <button
                     type="button"
-                    onClick={() => setStep('username')}
+                    onClick={() => {
+                      setStep('username');
+                      setPassword('');
+                      setErrorMessage('');
+                    }}
                     className="text-xs text-[#0062e0] hover:underline"
                   >
-                    Change
+                    Change ID
                   </button>
                 </div>
                 <input
@@ -238,16 +363,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                   autoFocus
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
+                  placeholder="Enter your password"
                   className="w-full px-3.5 py-2.5 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
                 />
               </div>
 
+              {isAdminMode && (
+                <div className="text-[11px] text-[#6b7280]">
+                  Admin Password: <code className="font-mono font-semibold bg-gray-100 px-1 py-0.5 rounded">admin@123</code>
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="w-full mt-2 bg-[#0062e0] hover:bg-[#0052be] text-white py-2.5 px-4 rounded-lg font-medium text-sm transition-colors shadow-sm"
+                className="w-full mt-2 bg-[#0062e0] hover:bg-[#0052be] text-white py-2.5 px-4 rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center justify-center space-x-2"
               >
-                Sign in as {isAdminMode ? 'Admin' : 'Student'}
+                <UserCheck className="w-4 h-4" />
+                <span>Sign in as {isAdminMode ? 'Admin Operator' : 'Student'}</span>
               </button>
             </form>
           )
@@ -284,7 +416,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-[#374151] mb-1">
-                  Phone (Optional)
+                  Phone
                 </label>
                 <input
                   type="tel"
@@ -312,6 +444,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
 
             <div>
               <label className="block text-xs font-medium text-[#374151] mb-1">
+                Department
+              </label>
+              <input
+                type="text"
+                value={signupDepartment}
+                onChange={(e) => setSignupDepartment(e.target.value)}
+                placeholder="Computer Science & Engineering"
+                className="w-full px-3.5 py-2 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-[#374151] mb-1">
                 Create Password *
               </label>
               <input
@@ -319,25 +464,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                 required
                 value={signupPassword}
                 onChange={(e) => setSignupPassword(e.target.value)}
-                placeholder="Choose a password"
+                placeholder="Choose a password (min 4 characters)"
                 className="w-full px-3.5 py-2 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full mt-3 bg-[#0062e0] hover:bg-[#0052be] active:bg-[#004299] text-white py-2.5 px-4 rounded-lg font-medium text-sm transition-colors shadow-sm"
+              className="w-full mt-3 bg-[#0062e0] hover:bg-[#0052be] active:bg-[#004299] text-white py-2.5 px-4 rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center justify-center space-x-2"
             >
-              Create Account & Sign In
+              <span>Create Account & Sign In</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </form>
         )}
 
         {/* Footer links */}
         <div className="flex items-center justify-center space-x-6 text-xs text-[#6b7280] mt-8 pt-4 border-t border-[#f3f4f6]">
-          <span className="hover:underline cursor-pointer">Help</span>
+          <span className="hover:underline cursor-pointer">Help Desk</span>
           <span>•</span>
-          <span className="hover:underline cursor-pointer">Privacy</span>
+          <span className="hover:underline cursor-pointer">Counter 1 & 2</span>
+          <span>•</span>
+          <span className="hover:underline cursor-pointer">Central Library</span>
         </div>
       </div>
 

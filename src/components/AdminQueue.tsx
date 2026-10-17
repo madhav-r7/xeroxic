@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PrintJob, User } from '../types';
 import { updateJobStatus, deletePrintJob } from '../services/storage';
+import { soundManager } from '../utils/audio';
 import {
   Printer,
   CheckCircle2,
@@ -13,7 +14,13 @@ import {
   ChevronRight,
   RefreshCw,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  Download,
+  Volume2,
+  VolumeX,
+  Bell,
+  FileText
 } from 'lucide-react';
 
 interface AdminQueueProps {
@@ -26,7 +33,42 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
   const [filter, setFilter] = useState<'all' | 'submitted' | 'processing' | 'ready' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState<PrintJob | null>(null);
+  const [previewJob, setPreviewJob] = useState<PrintJob | null>(null);
   const [actionSuccessMsg, setActionSuccessMsg] = useState('');
+  const [newOrderAlert, setNewOrderAlert] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(soundManager.isEnabled());
+
+  // Track known submitted job IDs to sound the bell when a new request arrives
+  const knownSubmittedIdsRef = useRef<Set<string>>(
+    new Set(jobs.filter((j) => j.status === 'submitted').map((j) => j.id))
+  );
+
+  useEffect(() => {
+    const currentSubmitted = jobs.filter((j) => j.status === 'submitted');
+    const newIncoming = currentSubmitted.filter(
+      (j) => !knownSubmittedIdsRef.current.has(j.id)
+    );
+
+    if (newIncoming.length > 0) {
+      soundManager.playNewOrderBell();
+      const first = newIncoming[0];
+      setNewOrderAlert(
+        `🛎️ New Print Order: ${first.fileName} (${first.id}) from ${first.studentName}`
+      );
+      setTimeout(() => setNewOrderAlert(null), 6000);
+    }
+
+    knownSubmittedIdsRef.current = new Set(currentSubmitted.map((j) => j.id));
+  }, [jobs]);
+
+  const toggleSound = () => {
+    const next = !soundEnabled;
+    soundManager.setEnabled(next);
+    setSoundEnabled(next);
+    if (next) {
+      soundManager.playNewOrderBell();
+    }
+  };
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
@@ -47,14 +89,17 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
 
     let text = '';
     if (newStatus === 'processing') text = `Order ${jobId} status updated to Printing.`;
-    if (newStatus === 'ready') text = `Order ${jobId} printed & ready. File purged from storage.`;
-    if (newStatus === 'completed') text = `Order ${jobId} completed & automatically deleted from cloud database.`;
+    if (newStatus === 'ready') text = `Order ${jobId} printed & ready for pickup at Counter.`;
+    if (newStatus === 'completed') text = `Order ${jobId} completed & handed over to student.`;
 
     setActionSuccessMsg(text);
     setTimeout(() => setActionSuccessMsg(''), 3500);
 
     if (selectedJob && selectedJob.id === jobId) {
       setSelectedJob((prev) => (prev ? { ...prev, status: newStatus } : null));
+    }
+    if (previewJob && previewJob.id === jobId) {
+      setPreviewJob((prev) => (prev ? { ...prev, status: newStatus } : null));
     }
   };
 
@@ -68,6 +113,27 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
       if (selectedJob && selectedJob.id === jobId) {
         setSelectedJob(null);
       }
+      if (previewJob && previewJob.id === jobId) {
+        setPreviewJob(null);
+      }
+    }
+  };
+
+  // Direct In-Web Print Trigger
+  const handleDirectWebPrint = () => {
+    if (!previewJob) return;
+    try {
+      const iframe = document.getElementById('admin-preview-iframe') as HTMLIFrameElement;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        return;
+      }
+    } catch (e) {
+      console.warn('Iframe print error, falling back to window.open:', e);
+    }
+    if (previewJob.fileUrl) {
+      window.open(previewJob.fileUrl, '_blank');
     }
   };
 
@@ -92,20 +158,53 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
             </span>
           </div>
           <p className="text-xs text-[#605e5c] mt-0.5">
-            Manage incoming student print orders, update printing status, and handle pickups
+            Incoming student print requests, in-web print portal, preview & counter queue
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2.5">
+          {/* Sound Notification Alert Toggle */}
+          <button
+            onClick={toggleSound}
+            title={soundEnabled ? 'Mute Order Bell Chimes' : 'Enable Order Bell Chimes'}
+            className={`text-xs px-3 py-1.5 rounded-[2px] font-semibold flex items-center space-x-1.5 border transition-colors shadow-sm ${
+              soundEnabled
+                ? 'bg-white text-[#107c10] border-[#107c10]/40 hover:bg-[#dff6dd]/30'
+                : 'bg-white text-[#a19f9d] border-[#8a8886] hover:bg-[#f3f2f1]'
+            }`}
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-[#107c10]" /> : <VolumeX className="w-3.5 h-3.5 text-[#a19f9d]" />}
+            <span>Bell: {soundEnabled ? 'ON' : 'MUTED'}</span>
+          </button>
+
+          <button
+            onClick={() => soundManager.playNewOrderBell()}
+            title="Test audio chime"
+            className="text-xs bg-white hover:bg-[#f3f2f1] text-[#0067b8] border border-[#8a8886] px-2.5 py-1.5 rounded-[2px] font-medium"
+          >
+            Test Bell
+          </button>
+
           <button
             onClick={onRefresh}
             className="text-xs bg-white hover:bg-[#f3f2f1] text-[#242424] border border-[#8a8886] px-3.5 py-1.5 rounded-[2px] font-semibold flex items-center space-x-1.5 transition-colors shadow-sm"
           >
             <RefreshCw className="w-3.5 h-3.5 text-[#0067b8]" />
-            <span>Refresh Queue</span>
+            <span>Refresh</span>
           </button>
         </div>
       </div>
+
+      {/* Bell / New Incoming Request Alert Banner */}
+      {newOrderAlert && (
+        <div className="mb-4 p-3.5 bg-[#fff4ce] text-[#835c00] border-2 border-[#f2c80f] rounded-[4px] text-xs font-semibold flex items-center justify-between animate-bounce">
+          <div className="flex items-center space-x-2">
+            <Bell className="w-4 h-4 text-[#d83b01]" />
+            <span>{newOrderAlert}</span>
+          </div>
+          <span className="text-[11px] font-normal text-[#605e5c]">Click "Preview & Print" to start</span>
+        </div>
+      )}
 
       {/* Success Notification Bar */}
       {actionSuccessMsg && (
@@ -114,7 +213,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
             <CheckCircle2 className="w-4 h-4" />
             <span>{actionSuccessMsg}</span>
           </div>
-          <span className="text-[11px] font-normal">Student tracking updated</span>
+          <span className="text-[11px] font-normal">Student tracking updated in real time</span>
         </div>
       )}
 
@@ -232,7 +331,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                 <th className="py-3 px-4 font-semibold">Format & Paper</th>
                 <th className="py-3 px-4 font-semibold">Amount</th>
                 <th className="py-3 px-4 font-semibold">Status</th>
-                <th className="py-3 px-4 font-semibold text-right">Actions</th>
+                <th className="py-3 px-4 font-semibold text-right">Actions & Print</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#edebe9] text-[#242424]">
@@ -269,19 +368,28 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
 
                     {/* Document & Specs */}
                     <td className="py-3 px-4">
-                      <div className="flex items-center space-x-1.5">
+                      <div className="flex items-center space-x-2">
                         <span className="font-medium text-[#242424] truncate max-w-[180px]" title={job.fileName}>
                           {job.fileName}
                         </span>
+                        {/* Preview icon button */}
+                        <button
+                          onClick={() => setPreviewJob(job)}
+                          className="text-[#0067b8] hover:bg-[#e6f2fb] p-1 rounded transition-colors"
+                          title="Open In-Web Document Preview & Print Portal"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
                         {job.fileUrl && (
                           <a
                             href={job.fileUrl}
+                            download={job.fileName}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[#0067b8] hover:text-[#004e8c] p-0.5 rounded"
-                            title="Open / Download Student Document"
+                            className="text-[#605e5c] hover:text-[#0067b8] p-1 rounded transition-colors"
+                            title="Download Document File"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
+                            <Download className="w-3.5 h-3.5" />
                           </a>
                         )}
                       </div>
@@ -315,8 +423,11 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                     </td>
 
                     {/* Amount */}
-                    <td className="py-3 px-4 font-bold text-[#242424]">
-                      ₹{job.cost}.00
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-[#242424]">₹{job.cost}.00</div>
+                      <div className="text-[10px] text-[#797775] capitalize">
+                        {job.paymentMethod === 'upi' ? 'UPI Online' : 'Pay at Counter'}
+                      </div>
                     </td>
 
                     {/* Status Badge */}
@@ -350,53 +461,63 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                     {/* Actions */}
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end space-x-1.5">
+                        {/* Direct Preview & Print Portal Button */}
+                        <button
+                          onClick={() => setPreviewJob(job)}
+                          className="bg-[#f3f2f1] hover:bg-[#edebe9] text-[#242424] border border-[#8a8886] px-2 py-1 rounded-[2px] font-semibold text-xs flex items-center space-x-1 transition-colors shadow-sm"
+                          title="Open Web Print Preview & Direct Print"
+                        >
+                          <Eye className="w-3 h-3 text-[#0067b8]" />
+                          <span>Preview</span>
+                        </button>
+
                         {job.status === 'submitted' && (
                           <button
                             onClick={() => handleUpdateStatus(job.id, 'processing', 'Printing in progress')}
-                            className="bg-[#0067b8] hover:bg-[#005da6] text-white px-2.5 py-1.5 rounded-[2px] font-semibold text-xs flex items-center space-x-1 transition-colors shadow-sm"
+                            className="bg-[#0067b8] hover:bg-[#005da6] text-white px-2.5 py-1 rounded-[2px] font-semibold text-xs flex items-center space-x-1 transition-colors shadow-sm"
                             title="Start Printing"
                           >
                             <Play className="w-3 h-3 fill-current" />
-                            <span>Start Print</span>
+                            <span>Start</span>
                           </button>
                         )}
 
                         {job.status === 'processing' && (
                           <button
                             onClick={() => handleUpdateStatus(job.id, 'ready', 'Printing complete. Kept at Counter.')}
-                            className="bg-[#107c10] hover:bg-[#0e690e] text-white px-2.5 py-1.5 rounded-[2px] font-semibold text-xs flex items-center space-x-1 transition-colors shadow-sm"
+                            className="bg-[#107c10] hover:bg-[#0e690e] text-white px-2.5 py-1 rounded-[2px] font-semibold text-xs flex items-center space-x-1 transition-colors shadow-sm"
                             title="Mark Ready for Pickup"
                           >
                             <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                            <span>Mark Ready</span>
+                            <span>Ready</span>
                           </button>
                         )}
 
                         {job.status === 'ready' && (
                           <button
                             onClick={() => handleUpdateStatus(job.id, 'completed', 'Collected by student')}
-                            className="bg-[#323130] hover:bg-[#201f1e] text-white px-2.5 py-1.5 rounded-[2px] font-semibold text-xs flex items-center space-x-1 transition-colors shadow-sm"
+                            className="bg-[#323130] hover:bg-[#201f1e] text-white px-2.5 py-1 rounded-[2px] font-semibold text-xs flex items-center space-x-1 transition-colors shadow-sm"
                             title="Mark Handed Over"
                           >
                             <PackageCheck className="w-3.5 h-3.5" />
-                            <span>Handed Over</span>
+                            <span>Done</span>
                           </button>
                         )}
 
                         <button
-                          onClick={() => setSelectedJob(job)}
-                          className="p-1.5 text-[#605e5c] hover:text-[#0067b8] hover:bg-[#e6f2fb] rounded-[2px] transition-colors"
-                          title="View Order Details"
+                          onClick={(e) => handleDeleteJob(job.id, e)}
+                          className="p-1 text-[#a19f9d] hover:text-[#d83b01] hover:bg-[#fed9cc]/40 rounded-[2px] transition-colors"
+                          title="Delete from Database & Storage"
                         >
-                          <ChevronRight className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
 
                         <button
-                          onClick={(e) => handleDeleteJob(job.id, e)}
-                          className="p-1.5 text-[#a19f9d] hover:text-[#d83b01] hover:bg-[#fdf3f2] rounded-[2px] transition-colors"
-                          title="Delete from Database"
+                          onClick={() => setSelectedJob(job)}
+                          className="p-1 text-[#605e5c] hover:text-[#0067b8] hover:bg-[#e6f2fb] rounded-[2px] transition-colors"
+                          title="View Order Details"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <ChevronRight className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -407,6 +528,163 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
           </table>
         </div>
       </div>
+
+      {/* IN-WEB DOCUMENT PREVIEW & PRINT PORTAL MODAL */}
+      {previewJob && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-white border border-[#e1dfdd] rounded-lg shadow-2xl max-w-4xl w-full flex flex-col max-h-[92vh] overflow-hidden animate-fadeIn">
+            {/* Modal Header */}
+            <div className="p-4 bg-[#faf9f8] border-b border-[#edebe9] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="overflow-hidden">
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono text-sm font-bold text-[#0067b8] bg-[#e6f2fb] px-2 py-0.5 rounded">
+                    {previewJob.id}
+                  </span>
+                  <span className="text-xs text-[#605e5c]">by {previewJob.studentName} ({previewJob.studentRoll})</span>
+                </div>
+                <h3 className="text-base font-semibold text-[#242424] truncate mt-1" title={previewJob.fileName}>
+                  {previewJob.fileName}
+                </h3>
+              </div>
+
+              {/* Action Buttons: Direct Print + Download */}
+              <div className="flex items-center space-x-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleDirectWebPrint}
+                  className="bg-[#0067b8] hover:bg-[#005da6] active:bg-[#004e8c] text-white px-3.5 py-2 rounded text-xs font-semibold flex items-center space-x-1.5 shadow-sm transition-colors"
+                  title="Direct print from web without downloading"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Direct Web Print</span>
+                </button>
+
+                {previewJob.fileUrl && (
+                  <a
+                    href={previewJob.fileUrl}
+                    download={previewJob.fileName}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white hover:bg-[#f3f2f1] text-[#242424] border border-[#8a8886] px-3 py-2 rounded text-xs font-semibold flex items-center space-x-1.5 transition-colors shadow-sm"
+                    title="Download document file"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download</span>
+                  </a>
+                )}
+
+                <button
+                  onClick={() => setPreviewJob(null)}
+                  className="p-1.5 text-[#605e5c] hover:text-[#242424] hover:bg-[#edebe9] rounded"
+                  title="Close Preview"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Print Specifications Banner */}
+            <div className="px-4 py-2.5 bg-[#f3f2f1] border-b border-[#edebe9] flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="font-semibold text-[#0067b8]">{previewJob.pageCount} Pages</span>
+                <span>•</span>
+                <span className="font-semibold">{previewJob.copies} Copy/Set</span>
+                <span>•</span>
+                <span className="capitalize font-medium">{previewJob.colorMode === 'color' ? 'Full Color' : 'Black & White'}</span>
+                <span>•</span>
+                <span className="capitalize">{previewJob.sides === 'double' ? 'Double Sided' : 'Single Sided'}</span>
+                <span>•</span>
+                <span>{previewJob.paperType === 'photo' ? 'Photo Paper' : 'Plain Paper'}</span>
+                <span>•</span>
+                <span>Size: {previewJob.paperSize}</span>
+              </div>
+              <div className="font-bold text-[#242424]">
+                Total: ₹{previewJob.cost}.00 ({previewJob.paymentMethod === 'upi' ? 'UPI' : 'Pay at Counter'})
+              </div>
+            </div>
+
+            {previewJob.instructions && (
+              <div className="px-4 py-2 bg-[#fff4ce] border-b border-[#f2c80f] text-xs text-[#835c00] flex items-center space-x-2">
+                <span className="font-bold">Student Note:</span>
+                <span>{previewJob.instructions}</span>
+              </div>
+            )}
+
+            {/* Embedded Web Previewer */}
+            <div className="flex-1 p-3 bg-[#e5e5e5] overflow-auto flex items-center justify-center min-h-[400px]">
+              {previewJob.fileUrl ? (
+                <iframe
+                  id="admin-preview-iframe"
+                  src={previewJob.fileUrl}
+                  title={previewJob.fileName}
+                  className="w-full h-full min-h-[500px] bg-white border border-[#c8c6c4] rounded shadow"
+                />
+              ) : (
+                <div className="p-8 bg-white border border-[#c8c6c4] rounded text-center max-w-md space-y-3 shadow">
+                  <FileText className="w-12 h-12 text-[#0067b8] mx-auto" />
+                  <div className="font-semibold text-sm text-[#242424]">{previewJob.fileName}</div>
+                  <p className="text-xs text-[#605e5c]">
+                    Live browser preview is not available for this local simulated file. Use Direct Web Print or Download.
+                  </p>
+                  <button
+                    onClick={handleDirectWebPrint}
+                    className="px-4 py-2 bg-[#0067b8] text-white text-xs font-semibold rounded"
+                  >
+                    Send to Printer
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer with Status Transitions */}
+            <div className="p-3 bg-white border-t border-[#edebe9] flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center space-x-2">
+                <span className="text-[#605e5c]">Current Status:</span>
+                <span className="font-semibold capitalize text-[#242424]">{previewJob.status}</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                {previewJob.status === 'submitted' && (
+                  <button
+                    onClick={() => handleUpdateStatus(previewJob.id, 'processing', 'Printing in progress')}
+                    className="bg-[#0067b8] hover:bg-[#005da6] text-white px-4 py-2 rounded font-semibold text-xs flex items-center space-x-1.5 shadow-sm"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Start Printing</span>
+                  </button>
+                )}
+
+                {previewJob.status === 'processing' && (
+                  <button
+                    onClick={() => handleUpdateStatus(previewJob.id, 'ready', 'Printing complete. Kept at Counter.')}
+                    className="bg-[#107c10] hover:bg-[#0e690e] text-white px-4 py-2 rounded font-semibold text-xs flex items-center space-x-1.5 shadow-sm"
+                  >
+                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Mark Ready for Pickup</span>
+                  </button>
+                )}
+
+                {previewJob.status === 'ready' && (
+                  <button
+                    onClick={() => handleUpdateStatus(previewJob.id, 'completed', 'Collected by student')}
+                    className="bg-[#323130] hover:bg-[#201f1e] text-white px-4 py-2 rounded font-semibold text-xs flex items-center space-x-1.5 shadow-sm"
+                  >
+                    <PackageCheck className="w-3.5 h-3.5" />
+                    <span>Mark Handed Over</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setPreviewJob(null)}
+                  className="px-3.5 py-2 border border-[#8a8886] hover:bg-[#f3f2f1] text-[#242424] font-semibold rounded text-xs"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Operator Job Inspection Modal */}
       {selectedJob && (
@@ -484,15 +762,28 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                     <span className="text-[#0067b8] font-semibold block text-xs">Attached Student Document</span>
                     <span className="text-[11px] text-[#605e5c]">{selectedJob.fileName}</span>
                   </div>
-                  <a
-                    href={selectedJob.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-1 px-3 py-1.5 bg-[#0067b8] hover:bg-[#005da6] text-white text-xs font-semibold rounded-[2px] shadow-sm transition-colors"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Open File</span>
-                  </a>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        setPreviewJob(selectedJob);
+                        setSelectedJob(null);
+                      }}
+                      className="inline-flex items-center space-x-1 px-3 py-1.5 bg-[#0067b8] hover:bg-[#005da6] text-white text-xs font-semibold rounded-[2px] shadow-sm transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Preview & Print</span>
+                    </button>
+                    <a
+                      href={selectedJob.fileUrl}
+                      download={selectedJob.fileName}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white border border-[#8a8886] hover:bg-[#f3f2f1] text-[#242424] text-xs font-semibold rounded-[2px]"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download</span>
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -515,53 +806,18 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[#edebe9] flex items-center justify-between">
+            <div className="pt-3 border-t border-[#edebe9] flex items-center justify-end space-x-2">
               <button
-                type="button"
-                onClick={(e) => handleDeleteJob(selectedJob.id, e)}
-                className="text-xs text-[#d83b01] hover:underline flex items-center space-x-1"
+                onClick={() => {
+                  setPreviewJob(selectedJob);
+                  setSelectedJob(null);
+                }}
+                className="bg-[#0067b8] hover:bg-[#005da6] text-white px-3.5 py-2 rounded-[2px] font-semibold text-xs transition-colors flex items-center space-x-1.5 shadow-sm"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete from Database</span>
+                <Printer className="w-3.5 h-3.5" />
+                <span>Open in Web Print Portal</span>
               </button>
 
-              <div className="flex items-center space-x-2">
-              {selectedJob.status === 'submitted' && (
-                <button
-                  onClick={() => {
-                    handleUpdateStatus(selectedJob.id, 'processing', 'Printing in progress');
-                    setSelectedJob(null);
-                  }}
-                  className="bg-[#0067b8] hover:bg-[#005da6] text-white px-4 py-2 rounded-[2px] font-semibold text-xs transition-colors flex items-center space-x-1.5"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Start Print</span>
-                </button>
-              )}
-              {selectedJob.status === 'processing' && (
-                <button
-                  onClick={() => {
-                    handleUpdateStatus(selectedJob.id, 'ready', 'Printing complete. Kept at Counter.');
-                    setSelectedJob(null);
-                  }}
-                  className="bg-[#107c10] hover:bg-[#0e690e] text-white px-4 py-2 rounded-[2px] font-semibold text-xs transition-colors flex items-center space-x-1.5"
-                >
-                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Mark Ready</span>
-                </button>
-              )}
-              {selectedJob.status === 'ready' && (
-                <button
-                  onClick={() => {
-                    handleUpdateStatus(selectedJob.id, 'completed', 'Collected by student');
-                    setSelectedJob(null);
-                  }}
-                  className="bg-[#323130] hover:bg-[#201f1e] text-white px-4 py-2 rounded-[2px] font-semibold text-xs transition-colors flex items-center space-x-1.5"
-                >
-                  <PackageCheck className="w-3.5 h-3.5" />
-                  <span>Mark Handed Over</span>
-                </button>
-              )}
               <button
                 onClick={() => setSelectedJob(null)}
                 className="px-3 py-2 border border-[#8a8886] hover:bg-[#f3f2f1] text-[#242424] font-semibold text-xs rounded-[2px]"
@@ -571,8 +827,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
             </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </div>
   );
 };
