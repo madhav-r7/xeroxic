@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { PrintJob, User } from '../types';
-import { addPrintJobAsync } from '../services/storage';
+import { addPrintJobAsync, generateOrderId } from '../services/storage';
+import { mergeFilesToPdf, MAX_PAGE_COUNT, MAX_TOTAL_SIZE_BYTES } from '../utils/pdfMerger';
+import { PDFDocument } from 'pdf-lib';
 import {
   Upload,
   Check,
@@ -17,7 +19,13 @@ import {
   Banknote,
   ShieldCheck,
   Loader2,
-  Trash2
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  Plus,
+  ExternalLink,
+  Image as ImageIcon,
+  CheckCircle2
 } from 'lucide-react';
 
 interface UploadAssignmentProps {
@@ -25,15 +33,27 @@ interface UploadAssignmentProps {
   onJobCreated: (job: PrintJob) => void;
 }
 
+export interface UploadedFileItem {
+  id: string;
+  file: File;
+  name: string;
+  size: number;
+  sizeFormatted: string;
+  type: string;
+}
+
 export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobCreated }) => {
   // Navigation phase: 'upload' | 'configure' | 'payment'
   const [currentStep, setCurrentStep] = useState<'upload' | 'configure' | 'payment'>('upload');
 
-  // File state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Multi-file state
+  const [fileList, setFileList] = useState<UploadedFileItem[]>([]);
+  const [mergedFile, setMergedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState('');
   const [fileSize, setFileSize] = useState('');
-  const [pageCount, setPageCount] = useState<number>(0);
+  const [pageCount, setPageCount] = useState<number>(1);
+  const [isMerging, setIsMerging] = useState(false);
+  const [mergeError, setMergeError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
   // Print configuration state (No binding options)
@@ -54,8 +74,8 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successJob, setSuccessJob] = useState<PrintJob | null>(null);
 
-  // Price calculations - strictly 0 until a document is uploaded!
-  const hasFile = Boolean(selectedFile && fileName);
+  // Price calculations - strictly 0 until files are uploaded and merged!
+  const hasFile = fileList.length > 0 && Boolean(mergedFile);
   const perPageRate = colorMode === 'color' ? 10 : 2;
   const paperMultiplier = paperSize === 'A3' ? 2 : 1;
   const pagesCost = hasFile ? pageCount * copies * perPageRate * paperMultiplier : 0;
@@ -63,7 +83,126 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
   const urgentFee = hasFile && isUrgent ? 10 : 0;
   const totalCost = hasFile ? pagesCost + photoPaperFee + urgentFee : 0;
 
-  // File drop & selection handlers
+  // Merge files pipeline using pdf-lib
+  const triggerMerge = async (items: UploadedFileItem[]) => {
+    if (items.length === 0) {
+      setMergedFile(null);
+      setFileName('');
+      setFileSize('');
+      setPageCount(1);
+      setMergeError(null);
+      setIsMerging(false);
+      return;
+    }
+
+    setIsMerging(true);
+    setMergeError(null);
+
+    try {
+      const rawFiles = items.map((item) => item.file);
+      const result = await mergeFilesToPdf(rawFiles);
+      setMergedFile(result.mergedFile);
+      setFileName(result.mergedFile.name);
+      setFileSize(result.fileSizeFormatted);
+      setPageCount(result.pageCount);
+    } catch (err: any) {
+      console.error('Merge error:', err);
+      setMergeError(err.message || 'Failed to merge files into a PDF.');
+    } finally {
+      setIsMerging(false);
+    }
+  };
+
+  // Add files to queue
+  const processNewFiles = async (incoming: FileList | File[]) => {
+    const validExtensions = ['.pdf', '.jpg', '.jpeg', '.png'];
+    const validFiles: File[] = [];
+    const rejectedFiles: string[] = [];
+
+    const fileArray = Array.from(incoming);
+    for (const f of fileArray) {
+      const lower = f.name.toLowerCase();
+      const isValid =
+        validExtensions.some((ext) => lower.endsWith(ext)) ||
+        f.type === 'application/pdf' ||
+        f.type.startsWith('image/');
+      if (isValid) {
+        validFiles.push(f);
+      } else {
+        rejectedFiles.push(f.name);
+      }
+    }
+
+    if (rejectedFiles.length > 0) {
+      alert(`Only PDF, JPG, JPEG, and PNG files are supported.\nSkipped: ${rejectedFiles.join(', ')}`);
+    }
+
+    if (validFiles.length === 0) return;
+
+    // Check size limit
+    const existingBytes = fileList.reduce((acc, f) => acc + f.size, 0);
+    const newBytes = validFiles.reduce((acc, f) => acc + f.size, 0);
+    if (existingBytes + newBytes > MAX_TOTAL_SIZE_BYTES) {
+      alert(`Total size of files cannot exceed 50 MB.`);
+      return;
+    }
+
+    const newItems: UploadedFileItem[] = validFiles.map((file) => ({
+      id: `${file.name}-${file.size}-${Math.random().toString(36).substring(2, 8)}`,
+      file,
+      name: file.name,
+      size: file.size,
+      sizeFormatted: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+      type: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+    }));
+
+    const updatedList = [...fileList, ...newItems];
+    setFileList(updatedList);
+    await triggerMerge(updatedList);
+    setCurrentStep('configure');
+  };
+
+  // Reorder files
+  const handleMoveFile = async (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= fileList.length) return;
+
+    const reordered = [...fileList];
+    const [movedItem] = reordered.splice(index, 1);
+    reordered.splice(targetIndex, 0, movedItem);
+
+    setFileList(reordered);
+    await triggerMerge(reordered);
+  };
+
+  // Remove single file
+  const handleRemoveFile = async (id: string) => {
+    const updated = fileList.filter((item) => item.id !== id);
+    setFileList(updated);
+    if (updated.length === 0) {
+      setMergedFile(null);
+      setFileName('');
+      setFileSize('');
+      setPageCount(1);
+      setMergeError(null);
+      setCurrentStep('upload');
+    } else {
+      await triggerMerge(updated);
+    }
+  };
+
+  // Clear all files
+  const handleClearAll = () => {
+    setFileList([]);
+    setMergedFile(null);
+    setFileName('');
+    setFileSize('');
+    setPageCount(1);
+    setMergeError(null);
+    setCurrentStep('upload');
+  };
+
+  // Drag & drop handlers
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -78,82 +217,50 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelected(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processNewFiles(e.dataTransfer.files);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileSelected(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      processNewFiles(e.target.files);
+      // Reset input value so same files can be re-selected if removed
+      e.target.value = '';
     }
   };
 
-  const handleFileSelected = (file: File) => {
-    setSelectedFile(file);
-    setFileName(file.name);
-    const sizeInMb = (file.size / (1024 * 1024)).toFixed(1);
-    setFileSize(`${sizeInMb} MB`);
-
-    // Parse actual page count for PDF if possible
-    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        try {
-          const content = reader.result as string;
-          // Count /Type /Page (excluding /Type /Pages)
-          const matches = content.match(/\/Type\s*\/Page\b/g);
-          if (matches && matches.length > 0) {
-            setPageCount(matches.length);
-            return;
-          }
-          const countMatch = content.match(/\/Count\s+(\d+)/);
-          if (countMatch && countMatch[1]) {
-            const count = parseInt(countMatch[1], 10);
-            if (count > 0 && count < 1000) {
-              setPageCount(count);
-              return;
-            }
-          }
-        } catch {
-          // fallback
-        }
-        const estimatedPages = Math.max(1, Math.min(60, Math.round(file.size / (120 * 1024))));
-        setPageCount(estimatedPages);
-      };
-      // Read initial slice for fast client-side parsing
-      reader.readAsText(file.slice(0, 500000));
-    } else {
-      const estimatedPages = Math.max(1, Math.min(60, Math.round(file.size / (120 * 1024))));
-      setPageCount(estimatedPages);
-    }
-
-    setCurrentStep('configure');
-  };
-
-  const handleUseSampleFile = (e: React.MouseEvent) => {
+  // Generate sample files (creates a valid sample PDF using pdf-lib)
+  const handleUseSampleFile = async (e: React.MouseEvent) => {
     e.preventDefault();
-    const sample = new File(['sample pdf content'], 'Lab_Assignment_Unit_4.pdf', {
-      type: 'application/pdf',
-    });
-    setSelectedFile(sample);
-    setFileName('Lab_Assignment_Unit_4.pdf');
-    setFileSize('2.8 MB');
-    setPageCount(12);
-    setCurrentStep('configure');
+    try {
+      const sampleDoc = await PDFDocument.create();
+      sampleDoc.addPage([595.28, 841.89]);
+      sampleDoc.addPage([595.28, 841.89]);
+      const pdfBytes = await sampleDoc.save();
+      const sample = new File([pdfBytes], 'Lab_Assignment_Unit_4.pdf', {
+        type: 'application/pdf',
+      });
+      await processNewFiles([sample]);
+    } catch (err) {
+      console.error('Error generating sample document:', err);
+    }
   };
 
-  const handleResetFile = () => {
-    setSelectedFile(null);
-    setFileName('');
-    setFileSize('');
-    setPageCount(0);
-    setCurrentStep('upload');
+  // Open merged PDF preview in a new browser tab
+  const handlePreviewMergedPdf = () => {
+    if (!mergedFile) return;
+    const blobUrl = URL.createObjectURL(mergedFile);
+    window.open(blobUrl, '_blank');
   };
 
   const handleProceedToPayment = () => {
-    if (!fileName) {
-      alert('Please upload an assignment document first.');
+    if (!mergedFile || fileList.length === 0) {
+      alert('Please upload and merge at least one document or image first.');
+      return;
+    }
+    if (mergeError) {
+      alert(`Please fix merging errors before proceeding:\n${mergeError}`);
       return;
     }
     setCurrentStep('payment');
@@ -162,23 +269,23 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
 
   const handleFinalOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fileName) return;
+    if (!mergedFile) return;
 
     setIsSubmitting(true);
 
-    const randomToken = `XER-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const randomToken = generateOrderId();
     const now = new Date().toISOString();
 
     const newJob: PrintJob = {
       id: randomToken,
       studentId: user.id,
       studentName: user.name,
-      studentRoll: user.studentId || '2024CS1092',
+      studentRoll: user.studentId || '250222',
       studentPhone: user.phone || '+91 98765 43210',
       department: user.department || 'Campus Student',
-      fileName: fileName,
-      fileSize: fileSize || '2.5 MB',
-      fileType: selectedFile?.type || 'application/pdf',
+      fileName: fileName || mergedFile.name,
+      fileSize: fileSize || '1.5 MB',
+      fileType: 'application/pdf',
       pageCount: pageCount,
       copies: copies,
       colorMode: colorMode,
@@ -195,19 +302,21 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
       utrNumber: utrNumber.trim() || undefined,
       createdAt: now,
       updatedAt: now,
-      pickupCounter: isUrgent ? 'Counter 2' : 'Counter 1',
+      pickupCounter: 'AIT Xerox Shop',
       estimatedPickupTime: isUrgent ? '10-15 minutes' : '20-25 minutes',
       statusHistory: [
         {
           status: 'submitted',
           timestamp: now,
-          note: `Order placed online via ${paymentMethod === 'upi' ? 'UPI' : 'Pay at Counter'}. Queued at Xerox counter.`,
+          note: `Order placed online (${fileList.length} files merged into single PDF) via ${
+            paymentMethod === 'upi' ? 'UPI' : 'Pay at Counter'
+          }. Queued at AIT Xerox Shop.`,
         },
       ],
     };
 
     try {
-      await addPrintJobAsync(newJob, selectedFile);
+      await addPrintJobAsync(newJob, mergedFile);
       onJobCreated(newJob);
       setSuccessJob(newJob);
     } catch (err) {
@@ -232,7 +341,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
             <div>
               <h2 className="text-xl font-semibold text-[#242424]">Print Request Received!</h2>
               <p className="text-xs text-[#605e5c]">
-                Your document has been sent to the college Xerox operator desk.
+                Your single merged PDF has been sent to the AIT Xerox operator desk.
               </p>
             </div>
           </div>
@@ -269,7 +378,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
             <div className="font-semibold text-sm text-[#242424]">Print Specifications</div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div className="bg-[#faf9f8] p-2.5 border border-[#e1dfdd] rounded">
-                <span className="text-[#605e5c] block text-[11px]">Document:</span>
+                <span className="text-[#605e5c] block text-[11px]">Merged PDF:</span>
                 <span className="font-medium truncate block" title={successJob.fileName}>
                   {successJob.fileName}
                 </span>
@@ -300,9 +409,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               type="button"
               onClick={() => {
                 setSuccessJob(null);
-                setSelectedFile(null);
-                setFileName('');
-                setCurrentStep('upload');
+                handleClearAll();
               }}
               className="w-full sm:w-auto px-4 py-2 border border-[#8a8886] hover:bg-[#f3f2f1] text-[#242424] text-xs font-semibold rounded transition-colors"
             >
@@ -322,7 +429,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
     );
   }
 
-  // STEP 3: TEMPORARY PAYMENT PAGE
+  // STEP 3: PAYMENT PAGE
   if (currentStep === 'payment') {
     return (
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 text-left">
@@ -389,7 +496,6 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                         {/* Mock UPI QR Graphic */}
                         <div className="w-32 h-32 shrink-0 bg-white border border-[#242424] p-2 flex flex-col items-center justify-center rounded">
                           <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
-                            {/* SVG QR Code Pattern */}
                             <rect width="100" height="100" fill="#ffffff" />
                             <rect x="10" y="10" width="25" height="25" fill="#000" />
                             <rect x="15" y="15" width="15" height="15" fill="#fff" />
@@ -403,7 +509,6 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                             <rect x="15" y="70" width="15" height="15" fill="#fff" />
                             <rect x="18" y="73" width="9" height="9" fill="#000" />
 
-                            {/* Inner data blocks */}
                             <rect x="42" y="12" width="6" height="6" fill="#000" />
                             <rect x="52" y="12" width="6" height="6" fill="#000" />
                             <rect x="42" y="22" width="6" height="6" fill="#000" />
@@ -424,11 +529,11 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                           <div className="text-[11px] font-semibold text-[#605e5c] uppercase">Scan & Pay</div>
                           <div className="text-base font-bold text-[#0067b8]">₹{totalCost}.00</div>
                           <div className="text-xs text-[#242424]">
-                            UPI ID: <span className="font-mono font-semibold">college.xerox@upi</span>
+                            UPI ID: <span className="font-mono font-semibold">ait.xerox@upi</span>
                           </div>
                           <div className="text-[11px] text-[#605e5c] flex items-center space-x-1 pt-1">
                             <ShieldCheck className="w-3.5 h-3.5 text-[#107c10]" />
-                            <span>Verified College Xerox Merchant</span>
+                            <span>Verified AIT Xerox Shop</span>
                           </div>
                         </div>
                       </div>
@@ -478,7 +583,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                   {paymentMethod === 'counter' && (
                     <div className="mt-3 pt-3 border-t border-[#edebe9] text-xs text-[#605e5c] space-y-1">
                       <p>
-                        Your order will be printed and kept ready at <strong>Counter 1 & 2</strong> in the Central Library.
+                        Your order will be printed and kept ready at <strong>AIT Xerox Shop</strong> (Library Ground Floor).
                       </p>
                       <p className="text-[#107c10] font-medium">
                         Pay ₹{totalCost}.00 in cash or via UPI when handing your Token ID.
@@ -489,50 +594,46 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               </div>
             </div>
 
-            {/* Right Column: Order Summary & Confirm (5 cols) */}
+            {/* Right Column: Order Summary & Checkout Button (5 cols) */}
             <div className="lg:col-span-5 space-y-4">
               <div className="bg-white border border-[#e1dfdd] rounded-lg p-5 shadow-sm space-y-4">
                 <h3 className="text-sm font-semibold text-[#242424] pb-2 border-b border-[#edebe9]">
                   Order Summary
                 </h3>
 
-                <div className="text-xs space-y-2 pb-3 border-b border-[#edebe9]">
+                {/* Document summary */}
+                <div className="p-3 bg-[#faf9f8] border border-[#e1dfdd] rounded space-y-1.5 text-xs">
+                  <div className="font-semibold text-[#242424] truncate" title={fileName}>
+                    {fileName}
+                  </div>
+                  <div className="text-[#605e5c] flex items-center space-x-2">
+                    <span>{fileList.length} source file(s)</span>
+                    <span>•</span>
+                    <span className="font-semibold text-[#0067b8]">{pageCount} total pages</span>
+                    <span>•</span>
+                    <span>{fileSize}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-xs py-2 border-b border-[#edebe9]">
                   <div className="flex justify-between text-[#605e5c]">
-                    <span>Document</span>
-                    <span className="font-semibold text-[#242424] truncate max-w-[160px]" title={fileName}>
-                      {fileName}
+                    <span>
+                      Printing ({pageCount} pgs × {copies} × ₹{perPageRate})
                     </span>
+                    <span className="font-medium text-[#242424]">₹{pagesCost}.00</span>
                   </div>
-                  <div className="flex justify-between text-[#605e5c]">
-                    <span>Pages to Print</span>
-                    <span className="font-medium text-[#242424]">{pageCount} pages</span>
-                  </div>
-                  <div className="flex justify-between text-[#605e5c]">
-                    <span>Copies</span>
-                    <span className="font-medium text-[#242424]">{copies} copy/set</span>
-                  </div>
-                  <div className="flex justify-between text-[#605e5c]">
-                    <span>Color Mode</span>
-                    <span className="font-medium text-[#242424]">
-                      {colorMode === 'color' ? 'Color Print (₹10/pg)' : 'Black & White (₹2/pg)'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-[#605e5c]">
-                    <span>Sides</span>
-                    <span className="font-medium text-[#242424]">
-                      {sides === 'double' ? 'Double Sided' : 'Single Sided'}
-                    </span>
-                  </div>
-                  {paperType === 'photo' && (
+
+                  {photoPaperFee > 0 && (
                     <div className="flex justify-between text-[#605e5c]">
-                      <span>Paper Type</span>
-                      <span className="font-medium text-[#242424]">Photo Paper (+₹15)</span>
+                      <span>Photo Paper Finish</span>
+                      <span className="font-medium text-[#242424]">₹{photoPaperFee}.00</span>
                     </div>
                   )}
-                  {isUrgent && (
-                    <div className="flex justify-between text-[#d83b01]">
-                      <span>Urgent Priority</span>
-                      <span className="font-medium">+₹10.00</span>
+
+                  {urgentFee > 0 && (
+                    <div className="flex justify-between text-[#605e5c]">
+                      <span>Urgent Priority Fee</span>
+                      <span className="font-medium text-[#242424]">+₹10.00</span>
                     </div>
                   )}
                 </div>
@@ -551,7 +652,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Sending to Xerox Desk...</span>
+                        <span>Uploading Merged PDF & Sending...</span>
                       </>
                     ) : (
                       <>
@@ -586,23 +687,23 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
           New Print Order
         </h1>
         <p className="text-xs text-[#605e5c] mt-0.5">
-          Upload your document first to unlock page and print specifications
+          Upload single or multiple files (PDFs, JPGs, PNGs). They will be automatically merged into one print-ready PDF.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Upload Dropzone & (Conditional) Print Options (8 cols) */}
+        {/* Left Column: Upload Dropzone, File List & Print Options (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
-          {/* STEP 1: FILE UPLOADER */}
-          <div className="bg-white border border-[#e1dfdd] rounded-lg p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
+          {/* STEP 1: MULTI-FILE UPLOADER & MERGER */}
+          <div className="bg-white border border-[#e1dfdd] rounded-lg p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#edebe9]">
               <div className="flex items-center space-x-2">
                 <span className="w-5 h-5 rounded-full bg-[#0067b8] text-white text-xs font-semibold flex items-center justify-center">
                   1
                 </span>
-                <h2 className="text-sm font-semibold text-[#242424]">Document Upload</h2>
+                <h2 className="text-sm font-semibold text-[#242424]">Document & File Upload</h2>
               </div>
-              {!fileName && (
+              {fileList.length === 0 && (
                 <button
                   type="button"
                   onClick={handleUseSampleFile}
@@ -613,81 +714,180 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               )}
             </div>
 
-            {!fileName ? (
-              <div
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors ${
-                  dragActive
-                    ? 'border-[#0067b8] bg-[#e6f2fb]/40'
-                    : 'border-[#c8c6c4] hover:border-[#8a8886] bg-[#faf9f8]'
-                }`}
-              >
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#e6f2fb] text-[#0067b8] flex items-center justify-center">
-                  <Upload className="w-6 h-6" />
-                </div>
-                <div className="text-sm font-semibold text-[#242424]">
-                  Drag and drop your assignment or document here
-                </div>
-                <p className="text-xs text-[#605e5c] mt-1 mb-4">
-                  Supports PDF, DOCX, PPTX, or Image (Max 50 MB)
-                </p>
-                <label className="inline-flex items-center justify-center px-4 py-2 bg-[#0067b8] hover:bg-[#005da6] text-white text-xs font-semibold rounded cursor-pointer transition-colors shadow-sm">
-                  <span>Browse Device Files</span>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.docx,.doc,.pptx,.ppt,.jpg,.png"
-                    onChange={handleFileChange}
-                  />
-                </label>
+            {/* Drop Zone */}
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-colors ${
+                dragActive
+                  ? 'border-[#0067b8] bg-[#e6f2fb]/40'
+                  : 'border-[#c8c6c4] hover:border-[#8a8886] bg-[#faf9f8]'
+              }`}
+            >
+              <div className="w-11 h-11 mx-auto mb-2 rounded-full bg-[#e6f2fb] text-[#0067b8] flex items-center justify-center">
+                <Upload className="w-5 h-5" />
               </div>
-            ) : (
-              <div className="p-4 bg-[#f3f2f1] border border-[#e1dfdd] rounded-md flex items-center justify-between">
-                <div className="flex items-center space-x-3 overflow-hidden">
-                  <div className="w-10 h-10 rounded bg-[#e6f2fb] text-[#0067b8] flex items-center justify-center shrink-0">
-                    <FileCheck className="w-5 h-5" />
-                  </div>
-                  <div className="truncate">
-                    <div className="text-sm font-semibold text-[#242424] truncate" title={fileName}>
-                      {fileName}
-                    </div>
-                    <div className="text-xs text-[#605e5c] flex items-center space-x-2 mt-0.5">
-                      <span>{fileSize}</span>
-                      <span>•</span>
-                      <span className="text-[#107c10] font-medium">Ready for specifications</span>
-                    </div>
+              <div className="text-sm font-semibold text-[#242424]">
+                {fileList.length === 0 ? 'Drag and drop your files here' : 'Drag and drop more files here'}
+              </div>
+              <p className="text-xs text-[#605e5c] mt-1 mb-3">
+                Upload multiple <strong>PDF, JPG, JPEG, or PNG</strong> files (Max 50 MB total, up to 1,000 pages).
+              </p>
+              <label className="inline-flex items-center justify-center px-4 py-2 bg-[#0067b8] hover:bg-[#005da6] text-white text-xs font-semibold rounded cursor-pointer transition-colors shadow-sm">
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                <span>{fileList.length === 0 ? 'Select Files from Device' : 'Add More Files'}</span>
+                <input
+                  type="file"
+                  multiple
+                  className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileChange}
+                />
+              </label>
+            </div>
+
+            {/* Error Banner */}
+            {mergeError && (
+              <div className="p-3 bg-[#fdf3f2] border border-[#f1707a] rounded text-xs text-[#a80000] flex items-start space-x-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-semibold block">PDF Merging Error</span>
+                  <span>{mergeError}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Uploaded Files Queue (with Reordering & Delete) */}
+            {fileList.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-[#242424]">
+                    Queued Files ({fileList.length}) — Merged in this order:
+                  </span>
+                  <div className="flex items-center space-x-3">
+                    <label className="text-[#0067b8] hover:underline font-semibold cursor-pointer flex items-center space-x-1">
+                      <Plus className="w-3 h-3" />
+                      <span>Add More</span>
+                      <input
+                        type="file"
+                        multiple
+                        className="hidden"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleClearAll}
+                      className="text-[#d83b01] hover:underline font-medium"
+                    >
+                      Clear All
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 shrink-0 ml-3">
-                  <label className="text-xs text-[#0067b8] hover:underline font-semibold cursor-pointer">
-                    <span>Change</span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".pdf,.docx,.doc,.pptx,.ppt,.jpg,.png"
-                      onChange={handleFileChange}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleResetFile}
-                    className="text-xs text-[#d83b01] hover:underline font-semibold flex items-center space-x-1"
-                    title="Remove File"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Remove</span>
-                  </button>
+                <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                  {fileList.map((item, idx) => {
+                    const isPdf = item.type === 'application/pdf' || item.name.toLowerCase().endsWith('.pdf');
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-2.5 bg-[#f3f2f1] hover:bg-[#edebe9] border border-[#e1dfdd] rounded flex items-center justify-between transition-colors text-xs"
+                      >
+                        <div className="flex items-center space-x-2.5 overflow-hidden flex-1 mr-2">
+                          <span className="w-5 h-5 rounded bg-white text-[#605e5c] border border-[#c8c6c4] font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {idx + 1}
+                          </span>
+                          <div className="w-7 h-7 rounded bg-white border border-[#e1dfdd] text-[#0067b8] flex items-center justify-center shrink-0">
+                            {isPdf ? <FileText className="w-4 h-4 text-[#d83b01]" /> : <ImageIcon className="w-4 h-4 text-[#0067b8]" />}
+                          </div>
+                          <div className="truncate">
+                            <span className="font-semibold text-[#242424] block truncate" title={item.name}>
+                              {item.name}
+                            </span>
+                            <span className="text-[10px] text-[#797775]">
+                              {item.sizeFormatted} • {isPdf ? 'PDF document' : 'Image (aspect ratio kept on page)'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Reorder and Delete Actions */}
+                        <div className="flex items-center space-x-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveFile(idx, 'up')}
+                            disabled={idx === 0 || isMerging}
+                            className="p-1 rounded hover:bg-white text-[#605e5c] disabled:opacity-30 disabled:hover:bg-transparent"
+                            title="Move Up"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveFile(idx, 'down')}
+                            disabled={idx === fileList.length - 1 || isMerging}
+                            className="p-1 rounded hover:bg-white text-[#605e5c] disabled:opacity-30 disabled:hover:bg-transparent"
+                            title="Move Down"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(item.id)}
+                            disabled={isMerging}
+                            className="p-1 rounded hover:bg-[#fdf3f2] text-[#a19f9d] hover:text-[#d83b01] ml-1 transition-colors"
+                            title="Remove File"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Merged PDF Status Bar */}
+                <div className="pt-2">
+                  {isMerging ? (
+                    <div className="p-3 bg-[#e6f2fb] border border-[#0067b8]/30 rounded text-xs text-[#0067b8] flex items-center space-x-2">
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                      <span>Merging {fileList.length} files client-side with pdf-lib into single PDF...</span>
+                    </div>
+                  ) : mergedFile ? (
+                    <div className="p-3 bg-[#dff6dd] border border-[#a2e6a0] rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 text-[#107c10] shrink-0" />
+                        <div>
+                          <div className="font-semibold text-[#107c10] flex items-center space-x-1.5">
+                            <span>Ready to Print: Single Merged PDF</span>
+                            <span className="text-[11px] font-normal text-[#242424]">({fileSize})</span>
+                          </div>
+                          <div className="text-[11px] text-[#605e5c]">
+                            Actual page count: <strong className="text-[#0067b8] font-bold">{pageCount} pages</strong> (Images fitted to A4 preserving aspect ratio)
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handlePreviewMergedPdf}
+                        className="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-[#f3f2f1] text-[#0067b8] border border-[#0067b8]/40 rounded font-semibold text-xs shadow-sm transition-colors"
+                        title="Preview generated PDF in browser"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Preview Merged PDF</span>
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             )}
           </div>
 
-          {/* STEP 2: PRINT SPECIFICATIONS (SHOWN ONLY AFTER DOCUMENT UPLOADED) */}
-          {fileName && (
+          {/* STEP 2: PRINT SPECIFICATIONS (SHOWN AFTER FILES ADDED) */}
+          {fileList.length > 0 && (
             <div className="bg-white border border-[#e1dfdd] rounded-lg p-5 shadow-sm space-y-5 animate-fadeIn">
               <div className="flex items-center space-x-2 pb-2 border-b border-[#edebe9]">
                 <span className="w-5 h-5 rounded-full bg-[#0067b8] text-white text-xs font-semibold flex items-center justify-center">
@@ -696,19 +896,24 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                 <h2 className="text-sm font-semibold text-[#242424]">Print Specifications</h2>
               </div>
 
-              {/* Number of Pages to Print */}
+              {/* Number of Pages to Print (Actual page count from merged PDF) */}
               <div className="p-3 bg-[#faf9f8] border border-[#edebe9] rounded-md flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center space-x-2 text-[#242424]">
                   <Info className="w-4 h-4 text-[#0067b8]" />
-                  <span className="font-semibold">Number of pages to print:</span>
+                  <div>
+                    <span className="font-semibold">Actual Merged Page Count:</span>
+                    <span className="text-[#605e5c] text-[11px] block">
+                      Calculated directly from the merged PDF ({pageCount} {pageCount === 1 ? 'page' : 'pages'})
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <input
                     type="number"
                     min="1"
-                    max="1000"
+                    max={MAX_PAGE_COUNT}
                     value={pageCount}
-                    onChange={(e) => setPageCount(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) => setPageCount(Math.max(1, Math.min(MAX_PAGE_COUNT, parseInt(e.target.value) || 1)))}
                     className="w-20 px-2 py-1.5 border border-[#8a8886] rounded text-sm text-center font-semibold focus:outline-none focus:border-[#0067b8] bg-white"
                   />
                   <span className="text-[#605e5c] font-medium">pages</span>
@@ -772,7 +977,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                           : 'border-[#8a8886] hover:bg-[#f3f2f1] text-[#242424]'
                       }`}
                     >
-                      Double Sided (Back-to-Back)
+                      Double Sided (Duplex)
                     </button>
                     <button
                       type="button"
@@ -821,7 +1026,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                 </div>
               </div>
 
-              {/* Paper Type: Plain vs Photo Paper */}
+              {/* Paper Type: Plain vs Photo Paper (+15 rs) */}
               <div>
                 <label className="block text-xs font-semibold text-[#242424] mb-2">
                   Paper Type
@@ -854,7 +1059,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                     <div>
                       <div className="text-xs font-semibold text-[#242424]">Photo Paper</div>
                       <div className="text-[11px] text-[#605e5c] mt-0.5">Glossy high-resolution finish</div>
-                      <div className="text-xs font-bold text-[#0067b8] mt-1">+₹15.00</div>
+                      <div className="text-xs font-bold text-[#0067b8] mt-1">+₹15.00 / copy</div>
                     </div>
                     {paperType === 'photo' && <Check className="w-4 h-4 text-[#0067b8]" />}
                   </div>
@@ -938,7 +1143,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                 Student: <span className="font-semibold text-[#242424]">{user.name}</span>
               </div>
               <div className="text-[#605e5c]">
-                Roll No: <span className="font-semibold text-[#242424]">{user.studentId || '2024CS1092'}</span>
+                Roll No: <span className="font-semibold text-[#242424]">{user.studentId || '250222'}</span>
               </div>
               <div className="text-[#605e5c]">
                 Dept: <span className="text-[#242424]">{user.department || 'Campus Student'}</span>
@@ -968,7 +1173,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
 
                   {photoPaperFee > 0 && (
                     <div className="flex justify-between text-[#605e5c]">
-                      <span>Photo Paper Finish</span>
+                      <span>Photo Paper ({copies} copy)</span>
                       <span className="font-medium text-[#242424]">₹{photoPaperFee}.00</span>
                     </div>
                   )}
@@ -994,7 +1199,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
             <div className="py-3 border-b border-[#edebe9] space-y-2 text-xs">
               <div className="flex items-center space-x-2 text-[#605e5c]">
                 <MapPin className="w-4 h-4 text-[#0067b8] shrink-0" />
-                <span>Pickup: <strong>Library Ground Floor, Counter 1</strong></span>
+                <span>Pickup: <strong>AIT Xerox Shop (Library Ground Floor)</strong></span>
               </div>
               <div className="flex items-center space-x-2 text-[#605e5c]">
                 <Clock className="w-4 h-4 text-[#107c10] shrink-0" />
@@ -1011,9 +1216,9 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               <button
                 type="button"
                 onClick={handleProceedToPayment}
-                disabled={!hasFile}
+                disabled={!hasFile || isMerging || !!mergeError}
                 className={`w-full py-2.5 px-4 rounded font-semibold text-xs transition-colors flex items-center justify-center space-x-2 shadow-sm ${
-                  !hasFile
+                  !hasFile || isMerging || !!mergeError
                     ? 'bg-[#edebe9] text-[#a19f9d] cursor-not-allowed'
                     : 'bg-[#0067b8] hover:bg-[#005da6] active:bg-[#004e8c] text-white'
                 }`}
@@ -1025,7 +1230,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               {!hasFile && (
                 <div className="text-[11px] text-[#d83b01] flex items-center justify-center space-x-1 mt-2">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  <span>Upload your document first to proceed</span>
+                  <span>Upload your document or images to proceed</span>
                 </div>
               )}
             </div>

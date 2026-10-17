@@ -432,6 +432,9 @@ export async function addPrintJobAsync(job: PrintJob, file?: File | null): Promi
       const uploadedUrl = await uploadAssignmentFile(file, job.id);
       if (uploadedUrl) {
         fileUrl = uploadedUrl;
+        job.fileUrl = uploadedUrl;
+        const currentJobs = getStoredJobs();
+        saveStoredJobs(currentJobs.map((j) => (j.id === job.id ? { ...j, fileUrl: uploadedUrl } : j)));
       }
     }
     const inserted = await insertJobToSupabase(job, fileUrl);

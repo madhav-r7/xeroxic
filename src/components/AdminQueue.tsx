@@ -473,12 +473,17 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
 
                         {job.status === 'submitted' && (
                           <button
-                            onClick={() => handleUpdateStatus(job.id, 'processing', 'Printing in progress')}
+                            onClick={() => {
+                              if (job.fileUrl) {
+                                window.open(job.fileUrl, '_blank');
+                              }
+                              handleUpdateStatus(job.id, 'processing', 'Printing in progress');
+                            }}
                             className="bg-[#0067b8] hover:bg-[#005da6] text-white px-2.5 py-1 rounded-[2px] font-semibold text-xs flex items-center space-x-1 transition-colors shadow-sm"
-                            title="Start Printing"
+                            title="Start Printing & Open Merged PDF"
                           >
-                            <Play className="w-3 h-3 fill-current" />
-                            <span>Start</span>
+                            <Printer className="w-3 h-3" />
+                            <span>Start Print</span>
                           </button>
                         )}
 
@@ -818,6 +823,46 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                 <span>Open in Web Print Portal</span>
               </button>
 
+              {selectedJob.status === 'submitted' && (
+                <button
+                  onClick={() => {
+                    if (selectedJob.fileUrl) {
+                      window.open(selectedJob.fileUrl, '_blank');
+                    }
+                    handleUpdateStatus(selectedJob.id, 'processing', 'Printing in progress');
+                    setSelectedJob(null);
+                  }}
+                  className="bg-[#0067b8] hover:bg-[#005da6] text-white px-4 py-2 rounded-[2px] font-semibold text-xs transition-colors flex items-center space-x-1.5"
+                  title="Start Printing & Open Merged PDF"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Start Print & Open PDF</span>
+                </button>
+              )}
+              {selectedJob.status === 'processing' && (
+                <button
+                  onClick={() => {
+                    handleUpdateStatus(selectedJob.id, 'ready', 'Printing complete. Kept at Counter.');
+                    setSelectedJob(null);
+                  }}
+                  className="bg-[#107c10] hover:bg-[#0e690e] text-white px-4 py-2 rounded-[2px] font-semibold text-xs transition-colors flex items-center space-x-1.5"
+                >
+                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Mark Ready</span>
+                </button>
+              )}
+              {selectedJob.status === 'ready' && (
+                <button
+                  onClick={() => {
+                    handleUpdateStatus(selectedJob.id, 'completed', 'Collected by student');
+                    setSelectedJob(null);
+                  }}
+                  className="bg-[#323130] hover:bg-[#201f1e] text-white px-4 py-2 rounded-[2px] font-semibold text-xs transition-colors flex items-center space-x-1.5"
+                >
+                  <PackageCheck className="w-3.5 h-3.5" />
+                  <span>Mark Handed Over</span>
+                </button>
+              )}
               <button
                 onClick={() => setSelectedJob(null)}
                 className="px-3 py-2 border border-[#8a8886] hover:bg-[#f3f2f1] text-[#242424] font-semibold text-xs rounded-[2px]"
