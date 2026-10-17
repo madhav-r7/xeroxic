@@ -28,7 +28,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               Print assignments without waiting in line.
             </h1>
             <p className="text-sm sm:text-base text-[#605e5c] max-w-xl leading-relaxed">
-              Upload your assignments, lab manuals, and reports directly from your phone or laptop. Configure color, double-sided printing, and spiral binding, then pick up your documents from Counter 1 & 2 in the Central Library.
+              Upload your assignments, lab manuals, and reports directly from your phone or laptop. Configure color, paper finish, and double-sided printing, then pick up your documents from Counter 1 & 2 in the Central Library.
             </p>
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
@@ -180,7 +180,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   Access Print Portal
                 </h3>
                 <p className="text-xs text-[#605e5c] mt-2 leading-relaxed">
-                  Upload your PDF or DOCX assignment now, select single or double-sided, choose spiral binding, and send it to print.
+                  Upload your PDF or DOCX assignment now, select single or double-sided printing, choose paper type, and send it to print.
                 </p>
               </div>
             </div>

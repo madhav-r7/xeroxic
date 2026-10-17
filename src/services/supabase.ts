@@ -26,6 +26,7 @@ export function mapSupabaseToPrintJob(row: any): PrintJob {
     fileName: row.file_name || 'Document.pdf',
     fileSize: row.file_size || '1.0 MB',
     fileType: 'application/pdf',
+    fileUrl: row.file_url,
     pageCount: Number(row.page_count) || 1,
     copies: Number(row.copies) || 1,
     colorMode: (row.color_mode as 'bw' | 'color') || 'bw',

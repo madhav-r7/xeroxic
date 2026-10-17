@@ -12,7 +12,8 @@ import {
   X,
   ChevronRight,
   RefreshCw,
-  Trash2
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 
 interface AdminQueueProps {
@@ -228,7 +229,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                 <th className="py-3 px-4 font-semibold">Token ID</th>
                 <th className="py-3 px-4 font-semibold">Student</th>
                 <th className="py-3 px-4 font-semibold">Document & Specs</th>
-                <th className="py-3 px-4 font-semibold">Binding</th>
+                <th className="py-3 px-4 font-semibold">Format & Paper</th>
                 <th className="py-3 px-4 font-semibold">Amount</th>
                 <th className="py-3 px-4 font-semibold">Status</th>
                 <th className="py-3 px-4 font-semibold text-right">Actions</th>
@@ -268,8 +269,21 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
 
                     {/* Document & Specs */}
                     <td className="py-3 px-4">
-                      <div className="font-medium text-[#242424] truncate max-w-[200px]" title={job.fileName}>
-                        {job.fileName}
+                      <div className="flex items-center space-x-1.5">
+                        <span className="font-medium text-[#242424] truncate max-w-[180px]" title={job.fileName}>
+                          {job.fileName}
+                        </span>
+                        {job.fileUrl && (
+                          <a
+                            href={job.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#0067b8] hover:text-[#004e8c] p-0.5 rounded"
+                            title="Open / Download Student Document"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
                       </div>
                       <div className="text-[11px] text-[#605e5c] mt-0.5 flex flex-wrap items-center gap-1.5">
                         <span className="font-semibold text-[#0067b8]">{job.pageCount} pgs</span>
@@ -292,10 +306,12 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                       )}
                     </td>
 
-                    {/* Binding */}
-                    <td className="py-3 px-4 capitalize">
-                      <span className="font-medium">{job.binding}</span>
-                      <div className="text-[11px] text-[#797775]">{job.paperSize} ({job.orientation})</div>
+                    {/* Format & Paper */}
+                    <td className="py-3 px-4">
+                      <span className="font-medium text-[#242424]">{job.paperSize} • {job.sides === 'double' ? 'Double Sided' : 'Single'}</span>
+                      <div className="text-[11px] text-[#797775]">
+                        {job.paperType === 'photo' ? 'Photo Paper' : 'Plain Paper'} ({job.orientation})
+                      </div>
                     </td>
 
                     {/* Amount */}
@@ -457,10 +473,28 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                   <span className="font-semibold">{selectedJob.paperType === 'photo' ? 'Photo Paper (+₹15)' : 'Plain Paper'}</span>
                 </div>
                 <div className="p-2 border border-[#e1dfdd]">
-                  <span className="text-[#605e5c] block">Binding:</span>
-                  <span className="font-semibold capitalize">{selectedJob.binding}</span>
+                  <span className="text-[#605e5c] block">Payment:</span>
+                  <span className="font-semibold capitalize">{selectedJob.paymentMethod === 'upi' ? 'UPI Online' : 'Pay at Counter'}</span>
                 </div>
               </div>
+
+              {selectedJob.fileUrl && (
+                <div className="p-2.5 bg-[#e6f2fb]/50 border border-[#0067b8]/20 rounded-[2px] flex items-center justify-between">
+                  <div>
+                    <span className="text-[#0067b8] font-semibold block text-xs">Attached Student Document</span>
+                    <span className="text-[11px] text-[#605e5c]">{selectedJob.fileName}</span>
+                  </div>
+                  <a
+                    href={selectedJob.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1 px-3 py-1.5 bg-[#0067b8] hover:bg-[#005da6] text-white text-xs font-semibold rounded-[2px] shadow-sm transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Open File</span>
+                  </a>
+                </div>
+              )}
 
               {selectedJob.instructions && (
                 <div className="p-3 bg-[#fff4ce]/60 border border-[#f2c80f] rounded-[2px]">

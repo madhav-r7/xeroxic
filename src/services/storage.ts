@@ -185,6 +185,14 @@ export async function syncJobsFromSupabase(): Promise<PrintJob[]> {
   try {
     const remote = await fetchJobsFromSupabase();
     if (remote && remote.length > 0) {
+      const local = getStoredJobs();
+      const remoteMap = new Map(remote.map((r) => [r.id, r]));
+      // Keep any local-only jobs that haven't synced yet
+      for (const loc of local) {
+        if (!remoteMap.has(loc.id)) {
+          remote.push(loc);
+        }
+      }
       saveStoredJobs(remote);
       return remote;
     }
@@ -197,10 +205,10 @@ export async function syncJobsFromSupabase(): Promise<PrintJob[]> {
 export function getStoredUser(): User | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_USER);
-    if (!raw) return DEMO_STUDENT;
+    if (!raw) return null;
     return JSON.parse(raw);
   } catch {
-    return DEMO_STUDENT;
+    return null;
   }
 }
 
@@ -217,14 +225,13 @@ export function saveStoredUser(user: User | null): void {
   }
 }
 
-export function addPrintJob(job: PrintJob, file?: File | null): void {
-  // Update local storage first for instant feedback
+export async function addPrintJobAsync(job: PrintJob, file?: File | null): Promise<boolean> {
+  // Update local storage first for instant responsiveness
   const jobs = getStoredJobs();
-  const updated = [job, ...jobs];
+  const updated = [job, ...jobs.filter((j) => j.id !== job.id)];
   saveStoredJobs(updated);
 
-  // Sync to Supabase in background
-  (async () => {
+  try {
     let fileUrl: string | undefined = undefined;
     if (file) {
       const uploadedUrl = await uploadAssignmentFile(file, job.id);
@@ -232,8 +239,22 @@ export function addPrintJob(job: PrintJob, file?: File | null): void {
         fileUrl = uploadedUrl;
       }
     }
-    await insertJobToSupabase(job, fileUrl);
-  })().catch((err) => console.warn('Background Supabase insert error:', err));
+    const inserted = await insertJobToSupabase(job, fileUrl);
+    if (!inserted) {
+      console.warn('Supabase insert failed with fileUrl, retrying without fileUrl...');
+      await insertJobToSupabase(job, undefined);
+    }
+    return true;
+  } catch (err) {
+    console.error('Error sending job to Supabase:', err);
+    return false;
+  }
+}
+
+export function addPrintJob(job: PrintJob, file?: File | null): void {
+  addPrintJobAsync(job, file).catch((err) =>
+    console.warn('addPrintJob background error:', err)
+  );
 }
 
 export function updateJobStatus(jobId: string, newStatus: PrintJob['status'], note?: string): void {

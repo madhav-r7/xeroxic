@@ -29,6 +29,9 @@ export interface PrintJob {
   fileName: string;
   fileSize: string;
   fileType: string;
+  fileUrl?: string;
+  paymentMethod?: 'upi' | 'counter';
+  utrNumber?: string;
   pageCount: number;
   copies: number;
   colorMode: 'bw' | 'color';

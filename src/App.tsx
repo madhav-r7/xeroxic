@@ -28,22 +28,28 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab, showSignInModal]);
 
-  // Supabase initial sync and real-time subscription
+  // Supabase initial sync, live subscription, and background 5s poller
   useEffect(() => {
-    syncJobsFromSupabase().then((latest) => {
-      if (latest && latest.length > 0) {
-        setJobs(latest);
+    const doSync = async () => {
+      try {
+        const latest = await syncJobsFromSupabase();
+        if (latest && latest.length > 0) {
+          setJobs(latest);
+        }
+      } catch (err) {
+        console.warn('Sync error:', err);
       }
-    });
+    };
+
+    doSync();
+    const interval = setInterval(doSync, 5000);
 
     const unsubscribe = subscribeToLiveJobs(async () => {
-      const refreshed = await syncJobsFromSupabase();
-      if (refreshed && refreshed.length > 0) {
-        setJobs(refreshed);
-      }
+      await doSync();
     });
 
     return () => {
+      clearInterval(interval);
       unsubscribe();
     };
   }, []);
@@ -82,7 +88,7 @@ export function App() {
     if (user.role === 'admin') {
       setActiveTab('queue');
     } else {
-      setActiveTab('upload');
+      setActiveTab('home');
     }
   };
 
@@ -92,23 +98,30 @@ export function App() {
     setActiveTab('home');
   };
 
-  const handleRefreshJobs = () => {
-    setJobs(getStoredJobs());
+  const handleRefreshJobs = async () => {
+    const refreshed = await syncJobsFromSupabase();
+    setJobs(refreshed);
   };
 
-  const handleJobCreated = (_newJob: PrintJob) => {
-    setJobs(getStoredJobs());
+  const handleJobCreated = async (newJob: PrintJob) => {
+    setJobs((prev) => [newJob, ...prev.filter((j) => j.id !== newJob.id)]);
     setActiveTab('track');
+    const refreshed = await syncJobsFromSupabase();
+    setJobs(refreshed);
   };
 
-  // If user opens portal without an active session, default to demo student so they can upload immediately
   const handleOpenPortal = () => {
-    if (!currentUser) {
-      setCurrentUser(DEMO_STUDENT);
-      saveStoredUser(DEMO_STUDENT);
-    }
     setActiveTab('upload');
   };
+
+  // Require user to sign in or create an account before accessing the app
+  if (!currentUser) {
+    return (
+      <LoginPage
+        onLogin={handleLogin}
+      />
+    );
+  }
 
   if (showSignInModal) {
     return (

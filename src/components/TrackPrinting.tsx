@@ -448,8 +448,10 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
                         </span>
                       </div>
                       <div className="p-2.5 bg-[#f3f2f1] border border-[#e1dfdd] rounded-[2px]">
-                        <span className="text-[#605e5c] block text-[11px]">Binding Finish</span>
-                        <span className="font-semibold text-[#242424] capitalize">{job.binding}</span>
+                        <span className="text-[#605e5c] block text-[11px]">Payment Method</span>
+                        <span className="font-semibold text-[#242424] capitalize">
+                          {job.paymentMethod === 'upi' ? 'UPI Online' : 'Pay at Counter'}
+                        </span>
                       </div>
                       <div className="p-2.5 bg-[#f3f2f1] border border-[#e1dfdd] rounded-[2px]">
                         <span className="text-[#605e5c] block text-[11px]">Student Roll No.</span>

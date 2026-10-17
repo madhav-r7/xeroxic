@@ -65,9 +65,9 @@ export const RateCard: React.FC = () => {
       {/* Paper Types & Finishing */}
       <div className="bg-white border border-[#e1dfdd] rounded-[2px] shadow-sm overflow-hidden">
         <div className="px-5 py-3.5 bg-[#f3f2f1] border-b border-[#e1dfdd]">
-          <h2 className="text-sm font-semibold text-[#242424]">Paper Options & Finishing Charges</h2>
+          <h2 className="text-sm font-semibold text-[#242424]">Paper Options & Finishing</h2>
         </div>
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs">
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div className="p-3 border border-[#e1dfdd] rounded-[2px] bg-[#faf9f8]">
             <div className="font-semibold text-[#242424]">Plain Paper</div>
             <div className="text-[11px] text-[#605e5c] mt-0.5">Standard 75 GSM multipurpose</div>
@@ -82,16 +82,6 @@ export const RateCard: React.FC = () => {
             <div className="font-semibold text-[#242424]">Corner Staple</div>
             <div className="text-[11px] text-[#605e5c] mt-0.5">Top-left corner staple</div>
             <div className="text-sm font-bold text-[#107c10] mt-2">Free</div>
-          </div>
-          <div className="p-3 border border-[#e1dfdd] rounded-[2px] bg-[#faf9f8]">
-            <div className="font-semibold text-[#242424]">Spiral Binding</div>
-            <div className="text-[11px] text-[#605e5c] mt-0.5">Clear front & black back cover</div>
-            <div className="text-sm font-bold text-[#0067b8] mt-2">₹25.00</div>
-          </div>
-          <div className="p-3 border border-[#e1dfdd] rounded-[2px] bg-[#faf9f8]">
-            <div className="font-semibold text-[#242424]">Hardcover Book</div>
-            <div className="text-[11px] text-[#605e5c] mt-0.5">Final year major project report</div>
-            <div className="text-sm font-bold text-[#0067b8] mt-2">₹120.00</div>
           </div>
         </div>
       </div>
