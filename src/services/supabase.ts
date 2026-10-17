@@ -152,6 +152,59 @@ export async function updateJobStatusInSupabase(
   }
 }
 
+// Delete uploaded document file from Supabase storage bucket
+export async function deleteStorageFileFromSupabase(jobId: string): Promise<boolean> {
+  try {
+    const { data: fileList, error: listError } = await supabase.storage
+      .from('assignment')
+      .list('', { search: jobId });
+
+    if (listError) {
+      console.warn('Supabase list error for cleanup:', listError.message);
+      return false;
+    }
+
+    if (fileList && fileList.length > 0) {
+      const filesToRemove = fileList.map((f) => f.name);
+      const { error: removeError } = await supabase.storage
+        .from('assignment')
+        .remove(filesToRemove);
+
+      if (removeError) {
+        console.warn('Supabase storage remove error:', removeError.message);
+        return false;
+      }
+    }
+    return true;
+  } catch (err) {
+    console.warn('Could not remove file from Supabase storage:', err);
+    return false;
+  }
+}
+
+// Automatically delete job record and its uploaded file from Supabase
+export async function deleteJobFromSupabase(jobId: string): Promise<boolean> {
+  try {
+    // 1. Delete from print_jobs database table
+    const { error: dbError } = await supabase
+      .from('print_jobs')
+      .delete()
+      .eq('id', jobId);
+
+    if (dbError) {
+      console.warn('Supabase DB delete error:', dbError.message);
+    }
+
+    // 2. Also delete file from storage bucket
+    await deleteStorageFileFromSupabase(jobId);
+
+    return !dbError;
+  } catch (err) {
+    console.warn('Could not delete job from Supabase:', err);
+    return false;
+  }
+}
+
 // Realtime listener for live updates
 export function subscribeToLiveJobs(onChange: () => void) {
   try {

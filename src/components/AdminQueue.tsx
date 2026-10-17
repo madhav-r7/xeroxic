@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PrintJob, User } from '../types';
-import { updateJobStatus } from '../services/storage';
+import { updateJobStatus, deletePrintJob } from '../services/storage';
 import {
   Printer,
   CheckCircle2,
@@ -11,7 +11,8 @@ import {
   Check,
   X,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 
 interface AdminQueueProps {
@@ -45,14 +46,27 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
 
     let text = '';
     if (newStatus === 'processing') text = `Order ${jobId} status updated to Printing.`;
-    if (newStatus === 'ready') text = `Order ${jobId} marked as Ready for pickup.`;
-    if (newStatus === 'completed') text = `Order ${jobId} marked as Handed Over to student.`;
+    if (newStatus === 'ready') text = `Order ${jobId} printed & ready. File purged from storage.`;
+    if (newStatus === 'completed') text = `Order ${jobId} completed & automatically deleted from cloud database.`;
 
     setActionSuccessMsg(text);
-    setTimeout(() => setActionSuccessMsg(''), 3000);
+    setTimeout(() => setActionSuccessMsg(''), 3500);
 
     if (selectedJob && selectedJob.id === jobId) {
       setSelectedJob((prev) => (prev ? { ...prev, status: newStatus } : null));
+    }
+  };
+
+  const handleDeleteJob = (jobId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm(`Permanently delete order ${jobId} and its files from the database and storage?`)) {
+      deletePrintJob(jobId);
+      onRefresh();
+      setActionSuccessMsg(`Order ${jobId} deleted from database and storage.`);
+      setTimeout(() => setActionSuccessMsg(''), 3000);
+      if (selectedJob && selectedJob.id === jobId) {
+        setSelectedJob(null);
+      }
     }
   };
 
@@ -360,6 +374,14 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                         >
                           <ChevronRight className="w-4 h-4" />
                         </button>
+
+                        <button
+                          onClick={(e) => handleDeleteJob(job.id, e)}
+                          className="p-1.5 text-[#a19f9d] hover:text-[#d83b01] hover:bg-[#fdf3f2] rounded-[2px] transition-colors"
+                          title="Delete from Database"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -459,7 +481,17 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[#edebe9] flex items-center justify-end space-x-2">
+            <div className="pt-3 border-t border-[#edebe9] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={(e) => handleDeleteJob(selectedJob.id, e)}
+                className="text-xs text-[#d83b01] hover:underline flex items-center space-x-1"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete from Database</span>
+              </button>
+
+              <div className="flex items-center space-x-2">
               {selectedJob.status === 'submitted' && (
                 <button
                   onClick={() => {
@@ -505,7 +537,8 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
     </div>
   );
 };

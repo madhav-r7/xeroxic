@@ -152,6 +152,8 @@ import {
   insertJobToSupabase,
   updateJobStatusInSupabase,
   uploadAssignmentFile,
+  deleteJobFromSupabase,
+  deleteStorageFileFromSupabase,
 } from './supabase';
 
 const STORAGE_KEY_JOBS = 'xeroxic_jobs_v2';
@@ -262,7 +264,32 @@ export function updateJobStatus(jobId: string, newStatus: PrintJob['status'], no
   saveStoredJobs(updated);
 
   // Sync to Supabase in background
-  updateJobStatusInSupabase(jobId, newStatus).catch((err) =>
-    console.warn('Background Supabase update error:', err)
+  if (newStatus === 'completed') {
+    // Automatically purge printed & delivered job from Supabase database and storage
+    deleteJobFromSupabase(jobId).catch((err) =>
+      console.warn('Auto-delete from Supabase note:', err)
+    );
+  } else {
+    // Once printed (ready for pickup), remove the uploaded file from storage to protect privacy & space
+    if (newStatus === 'ready') {
+      deleteStorageFileFromSupabase(jobId).catch((err) =>
+        console.warn('Storage purge note:', err)
+      );
+    }
+
+    updateJobStatusInSupabase(jobId, newStatus).catch((err) =>
+      console.warn('Background Supabase update error:', err)
+    );
+  }
+}
+
+// Manually delete a print job from local storage and Supabase database/storage
+export function deletePrintJob(jobId: string): void {
+  const jobs = getStoredJobs();
+  const updated = jobs.filter((j) => j.id !== jobId);
+  saveStoredJobs(updated);
+
+  deleteJobFromSupabase(jobId).catch((err) =>
+    console.warn('Background Supabase delete error:', err)
   );
 }
