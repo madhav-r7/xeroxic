@@ -5,9 +5,9 @@ import {
   saveStoredUser,
   getStoredJobs,
   DEMO_STUDENT,
-  DEMO_ADMIN,
 } from './services/storage';
 import { Navbar } from './components/Navbar';
+import { HomeView } from './components/HomeView';
 import { LoginPage } from './components/LoginPage';
 import { UploadAssignment } from './components/UploadAssignment';
 import { TrackPrinting } from './components/TrackPrinting';
@@ -18,7 +18,13 @@ import { AdminHistory } from './components/AdminHistory';
 export function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(() => getStoredUser());
   const [jobs, setJobs] = useState<PrintJob[]>(() => getStoredJobs());
-  const [activeTab, setActiveTab] = useState<string>('upload');
+  const [activeTab, setActiveTab] = useState<string>('home');
+  const [showSignInModal, setShowSignInModal] = useState<boolean>(false);
+
+  // Scroll to top on navigation
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab, showSignInModal]);
 
   // Keep jobs and user in sync with localStorage and custom window events
   useEffect(() => {
@@ -47,18 +53,10 @@ export function App() {
     };
   }, []);
 
-  // Update default tab when user changes role
-  useEffect(() => {
-    if (currentUser?.role === 'admin') {
-      setActiveTab('queue');
-    } else {
-      setActiveTab('upload');
-    }
-  }, [currentUser?.role]);
-
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     saveStoredUser(user);
+    setShowSignInModal(false);
     if (user.role === 'admin') {
       setActiveTab('queue');
     } else {
@@ -69,14 +67,7 @@ export function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     saveStoredUser(null);
-  };
-
-  const handleSwitchRole = () => {
-    if (currentUser?.role === 'student') {
-      handleLogin(DEMO_ADMIN);
-    } else {
-      handleLogin(DEMO_STUDENT);
-    }
+    setActiveTab('home');
   };
 
   const handleRefreshJobs = () => {
@@ -88,63 +79,98 @@ export function App() {
     setActiveTab('track');
   };
 
-  if (!currentUser) {
-    return <LoginPage onLogin={handleLogin} />;
+  // If user opens portal without an active session, default to demo student so they can upload immediately
+  const handleOpenPortal = () => {
+    if (!currentUser) {
+      setCurrentUser(DEMO_STUDENT);
+      saveStoredUser(DEMO_STUDENT);
+    }
+    setActiveTab('upload');
+  };
+
+  if (showSignInModal) {
+    return (
+      <LoginPage
+        onLogin={handleLogin}
+        onCancel={() => setShowSignInModal(false)}
+      />
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] text-[#242424] font-segoe flex flex-col justify-between">
+    <div className="min-h-screen bg-[#f8f9fa] text-[#242424] font-segoe flex flex-col justify-between">
       <div>
         <Navbar
           user={currentUser}
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          onSwitchRole={handleSwitchRole}
+          onOpenSignIn={() => setShowSignInModal(true)}
           onLogout={handleLogout}
         />
 
         <main className="pb-12">
-          {currentUser.role === 'student' ? (
-            <>
-              {activeTab === 'upload' && (
-                <UploadAssignment user={currentUser} onJobCreated={handleJobCreated} />
-              )}
-              {activeTab === 'track' && (
-                <TrackPrinting
-                  user={currentUser}
-                  jobs={jobs}
-                  onRefresh={handleRefreshJobs}
-                  onNavigateToUpload={() => setActiveTab('upload')}
-                />
-              )}
-              {activeTab === 'rates' && <RateCard />}
-            </>
-          ) : (
-            <>
-              {activeTab === 'queue' && (
-                <AdminQueue
-                  user={currentUser}
-                  jobs={jobs}
-                  onRefresh={handleRefreshJobs}
-                />
-              )}
-              {activeTab === 'history' && <AdminHistory jobs={jobs} />}
-            </>
+          {activeTab === 'home' && (
+            <HomeView
+              onOpenPortal={handleOpenPortal}
+              onOpenRates={() => setActiveTab('rates')}
+              onOpenTracking={() => {
+                if (!currentUser) {
+                  setCurrentUser(DEMO_STUDENT);
+                  saveStoredUser(DEMO_STUDENT);
+                }
+                setActiveTab('track');
+              }}
+              onOpenSignIn={() => setShowSignInModal(true)}
+            />
           )}
+
+          {activeTab === 'upload' && (
+            <UploadAssignment
+              user={currentUser || DEMO_STUDENT}
+              onJobCreated={handleJobCreated}
+            />
+          )}
+
+          {activeTab === 'track' && (
+            <TrackPrinting
+              user={currentUser || DEMO_STUDENT}
+              jobs={jobs}
+              onRefresh={handleRefreshJobs}
+              onNavigateToUpload={() => setActiveTab('upload')}
+            />
+          )}
+
+          {activeTab === 'rates' && <RateCard />}
+
+          {activeTab === 'queue' && (
+            <AdminQueue
+              user={currentUser || DEMO_STUDENT}
+              jobs={jobs}
+              onRefresh={handleRefreshJobs}
+            />
+          )}
+
+          {activeTab === 'history' && <AdminHistory jobs={jobs} />}
         </main>
       </div>
 
-      {/* Clean footer */}
-      <footer className="bg-white border-t border-[#e1dfdd] py-3.5 px-6 text-xs text-[#605e5c]">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* Clean quiet footer */}
+      <footer className="bg-white border-t border-[#e5e5e5] py-6 px-6 text-xs text-[#605e5c]">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
             <span className="font-semibold text-[#242424]">Xeroxic</span>
             <span>•</span>
             <span>College Xerox Station (Library Ground Floor • Counter 1 & 2)</span>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-5">
             <span>Operating Hours: 8:30 AM – 7:30 PM (Mon–Sat)</span>
+            <span
+              onClick={() => setShowSignInModal(true)}
+              className="text-[#0067b8] hover:underline cursor-pointer"
+            >
+              Sign In
+            </span>
           </div>
         </div>
       </footer>
