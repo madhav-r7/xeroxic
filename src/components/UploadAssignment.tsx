@@ -33,7 +33,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState('');
   const [fileSize, setFileSize] = useState('');
-  const [pageCount, setPageCount] = useState<number>(8);
+  const [pageCount, setPageCount] = useState<number>(0);
   const [dragActive, setDragActive] = useState(false);
 
   // Print configuration state (No binding options)
@@ -54,13 +54,14 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successJob, setSuccessJob] = useState<PrintJob | null>(null);
 
-  // Price calculations (Zero binding cost)
+  // Price calculations - strictly 0 until a document is uploaded!
+  const hasFile = Boolean(selectedFile && fileName);
   const perPageRate = colorMode === 'color' ? 10 : 2;
   const paperMultiplier = paperSize === 'A3' ? 2 : 1;
-  const pagesCost = pageCount * copies * perPageRate * paperMultiplier;
-  const photoPaperFee = paperType === 'photo' ? 15 * copies : 0;
-  const urgentFee = isUrgent ? 10 : 0;
-  const totalCost = pagesCost + photoPaperFee + urgentFee;
+  const pagesCost = hasFile ? pageCount * copies * perPageRate * paperMultiplier : 0;
+  const photoPaperFee = hasFile && paperType === 'photo' ? 15 * copies : 0;
+  const urgentFee = hasFile && isUrgent ? 10 : 0;
+  const totalCost = hasFile ? pagesCost + photoPaperFee + urgentFee : 0;
 
   // File drop & selection handlers
   const handleDrag = (e: React.DragEvent) => {
@@ -93,8 +94,40 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
     setFileName(file.name);
     const sizeInMb = (file.size / (1024 * 1024)).toFixed(1);
     setFileSize(`${sizeInMb} MB`);
-    const estimatedPages = Math.max(1, Math.min(60, Math.round(file.size / (100 * 1024))));
-    setPageCount(estimatedPages || 8);
+
+    // Parse actual page count for PDF if possible
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        try {
+          const content = reader.result as string;
+          // Count /Type /Page (excluding /Type /Pages)
+          const matches = content.match(/\/Type\s*\/Page\b/g);
+          if (matches && matches.length > 0) {
+            setPageCount(matches.length);
+            return;
+          }
+          const countMatch = content.match(/\/Count\s+(\d+)/);
+          if (countMatch && countMatch[1]) {
+            const count = parseInt(countMatch[1], 10);
+            if (count > 0 && count < 1000) {
+              setPageCount(count);
+              return;
+            }
+          }
+        } catch {
+          // fallback
+        }
+        const estimatedPages = Math.max(1, Math.min(60, Math.round(file.size / (120 * 1024))));
+        setPageCount(estimatedPages);
+      };
+      // Read initial slice for fast client-side parsing
+      reader.readAsText(file.slice(0, 500000));
+    } else {
+      const estimatedPages = Math.max(1, Math.min(60, Math.round(file.size / (120 * 1024))));
+      setPageCount(estimatedPages);
+    }
+
     setCurrentStep('configure');
   };
 
@@ -114,6 +147,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
     setSelectedFile(null);
     setFileName('');
     setFileSize('');
+    setPageCount(0);
     setCurrentStep('upload');
   };
 
@@ -913,30 +947,46 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
 
             {/* Bill breakdown */}
             <div className="py-3 border-b border-[#edebe9] space-y-2 text-xs">
-              <div className="flex justify-between text-[#605e5c]">
-                <span>
-                  Printing ({pageCount} pgs × {copies} × ₹{perPageRate})
-                </span>
-                <span className="font-medium text-[#242424]">₹{pagesCost}.00</span>
-              </div>
-
-              {photoPaperFee > 0 && (
-                <div className="flex justify-between text-[#605e5c]">
-                  <span>Photo Paper Finish</span>
-                  <span className="font-medium text-[#242424]">₹{photoPaperFee}.00</span>
+              {!hasFile ? (
+                <div className="py-4 text-center bg-[#faf9f8] rounded border border-dashed border-[#edebe9] p-3">
+                  <div className="w-8 h-8 rounded-full bg-[#f3f2f1] text-[#8a8886] flex items-center justify-center mx-auto mb-1.5">
+                    <Upload className="w-4 h-4 text-[#0067b8]" />
+                  </div>
+                  <div className="text-xs font-semibold text-[#242424]">No Document Uploaded</div>
+                  <div className="text-[11px] text-[#605e5c] mt-0.5">
+                    Upload your file to see page count and printing estimate
+                  </div>
                 </div>
-              )}
+              ) : (
+                <>
+                  <div className="flex justify-between text-[#605e5c]">
+                    <span>
+                      Printing ({pageCount} pgs × {copies} × ₹{perPageRate})
+                    </span>
+                    <span className="font-medium text-[#242424]">₹{pagesCost}.00</span>
+                  </div>
 
-              {urgentFee > 0 && (
-                <div className="flex justify-between text-[#605e5c]">
-                  <span>Urgent Fee</span>
-                  <span className="font-medium text-[#242424]">₹{urgentFee}.00</span>
-                </div>
+                  {photoPaperFee > 0 && (
+                    <div className="flex justify-between text-[#605e5c]">
+                      <span>Photo Paper Finish</span>
+                      <span className="font-medium text-[#242424]">₹{photoPaperFee}.00</span>
+                    </div>
+                  )}
+
+                  {urgentFee > 0 && (
+                    <div className="flex justify-between text-[#605e5c]">
+                      <span>Urgent Fee</span>
+                      <span className="font-medium text-[#242424]">₹{urgentFee}.00</span>
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="pt-2 border-t border-dashed border-[#edebe9] flex justify-between items-baseline">
                 <span className="text-sm font-semibold text-[#242424]">Total Amount</span>
-                <span className="text-2xl font-bold text-[#0067b8]">₹{totalCost}.00</span>
+                <span className={`text-2xl font-bold ${hasFile ? 'text-[#0067b8]' : 'text-[#8a8886]'}`}>
+                  {hasFile ? `₹${totalCost}.00` : '₹0.00'}
+                </span>
               </div>
             </div>
 
@@ -961,18 +1011,18 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               <button
                 type="button"
                 onClick={handleProceedToPayment}
-                disabled={!fileName}
+                disabled={!hasFile}
                 className={`w-full py-2.5 px-4 rounded font-semibold text-xs transition-colors flex items-center justify-center space-x-2 shadow-sm ${
-                  !fileName
+                  !hasFile
                     ? 'bg-[#edebe9] text-[#a19f9d] cursor-not-allowed'
                     : 'bg-[#0067b8] hover:bg-[#005da6] active:bg-[#004e8c] text-white'
                 }`}
               >
-                <span>Proceed to Payment (₹{totalCost})</span>
+                <span>{hasFile ? `Proceed to Payment (₹${totalCost})` : 'Upload Document to Proceed'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              {!fileName && (
+              {!hasFile && (
                 <div className="text-[11px] text-[#d83b01] flex items-center justify-center space-x-1 mt-2">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>Upload your document first to proceed</span>
