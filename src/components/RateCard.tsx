@@ -111,11 +111,11 @@ export const RateCard: React.FC = () => {
           <div className="text-xs text-[#605e5c] space-y-2">
             <div>
               <strong className="text-[#242424] block">Location:</strong>
-              Central Library Building, Ground Floor (Counter 1 & Counter 2).
+              ait xerox shop.
             </div>
             <div>
               <strong className="text-[#242424] block">Operating Hours:</strong>
-              Monday to Saturday: 8:30 AM – 7:30 PM (Sunday closed).
+              Monday to Saturday: 8:30 AM – 4:00 PM (Sunday closed).
             </div>
             <div className="p-2.5 bg-[#e6f2fb] text-[#0067b8] border border-[#cbe4f9] rounded-[2px] flex items-center space-x-2">
               <Clock className="w-4 h-4 shrink-0" />

@@ -37,7 +37,7 @@ export const AdminHistory: React.FC<AdminHistoryProps> = ({ jobs }) => {
           <Search className="w-3.5 h-3.5 text-[#797775] absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search completed jobs..."
+            placeholder="Search Order ID (e.g. A001), Roll No, File..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#8a8886] rounded-[2px] focus:outline-none focus:border-[#0067b8]"
@@ -67,7 +67,7 @@ export const AdminHistory: React.FC<AdminHistoryProps> = ({ jobs }) => {
           <table className="w-full text-left text-xs">
             <thead className="bg-[#faf9f8] text-[#605e5c] border-b border-[#edebe9]">
               <tr>
-                <th className="py-3 px-4 font-semibold">Token ID</th>
+                <th className="py-3 px-4 font-semibold">Order ID</th>
                 <th className="py-3 px-4 font-semibold">Student Name & Roll</th>
                 <th className="py-3 px-4 font-semibold">Assignment File</th>
                 <th className="py-3 px-4 font-semibold">Print Specifications</th>

@@ -20,7 +20,11 @@ import { AdminHistory } from './components/AdminHistory';
 export function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(() => getStoredUser());
   const [jobs, setJobs] = useState<PrintJob[]>(() => getStoredJobs());
-  const [activeTab, setActiveTab] = useState<string>('home');
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    const user = getStoredUser();
+    if (user?.role === 'admin') return 'queue';
+    return 'upload';
+  });
   const [showSignInModal, setShowSignInModal] = useState<boolean>(false);
 
   // Scroll to top on navigation
@@ -195,17 +199,19 @@ export function App() {
           <div className="flex items-center space-x-2">
             <span className="font-semibold text-[#242424]">Xeroxic</span>
             <span>•</span>
-            <span>College Xerox Station (Library Ground Floor • Counter 1 & 2)</span>
+            <span className="uppercase">ait xerox shop</span>
           </div>
 
           <div className="flex items-center space-x-5">
-            <span>Operating Hours: 8:30 AM – 7:30 PM (Mon–Sat)</span>
-            <span
-              onClick={() => setShowSignInModal(true)}
-              className="text-[#0067b8] hover:underline cursor-pointer"
-            >
-              Sign In
-            </span>
+            <span>Operating Hours: 8:30 AM – 4:00 PM (Mon–Sat)</span>
+            {!currentUser && (
+              <span
+                onClick={() => setShowSignInModal(true)}
+                className="text-[#0067b8] hover:underline cursor-pointer"
+              >
+                Sign In
+              </span>
+            )}
           </div>
         </div>
       </footer>

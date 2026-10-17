@@ -212,7 +212,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
           <Search className="w-3.5 h-3.5 text-[#797775] absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search Token, Roll No, File..."
+            placeholder="Search Order ID (e.g. A001), Roll No, File..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#8a8886] rounded-[2px] focus:outline-none focus:border-[#0067b8]"
@@ -226,7 +226,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
           <table className="w-full text-left text-xs">
             <thead className="bg-[#faf9f8] text-[#605e5c] border-b border-[#edebe9]">
               <tr>
-                <th className="py-3 px-4 font-semibold">Token ID</th>
+                <th className="py-3 px-4 font-semibold">Order ID</th>
                 <th className="py-3 px-4 font-semibold">Student</th>
                 <th className="py-3 px-4 font-semibold">Document & Specs</th>
                 <th className="py-3 px-4 font-semibold">Format & Paper</th>

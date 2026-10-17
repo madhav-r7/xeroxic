@@ -5,7 +5,7 @@ export const DEMO_STUDENT: User = {
   name: 'Rohan Sharma',
   email: 'student@college.edu',
   role: 'student',
-  studentId: '2024CS1092',
+  studentId: '250222',
   department: 'Computer Science & Engineering',
   phone: '+91 98765 43210',
   balance: 350,
@@ -13,19 +13,26 @@ export const DEMO_STUDENT: User = {
 
 export const DEMO_ADMIN: User = {
   id: 'usr-admin-01',
-  name: 'College Xerox Shop',
+  name: 'AIT Xerox Shop',
   email: 'admin@college.edu',
   role: 'admin',
-  department: 'Xerox Counter Desk',
+  department: 'AIT Xerox Counter',
   phone: '+91 98765 00001',
 };
 
+export function generateOrderId(): string {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const letter = letters[Math.floor(Math.random() * letters.length)];
+  const num = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `${letter}${num}`;
+}
+
 const INITIAL_JOBS: PrintJob[] = [
   {
-    id: 'XER-2024-8841',
+    id: 'A101',
     studentId: 'usr-student-01',
     studentName: 'Rohan Sharma',
-    studentRoll: '2024CS1092',
+    studentRoll: '250222',
     studentPhone: '+91 98765 43210',
     department: 'Computer Science & Engineering',
     fileName: 'DBMS_Lab_Assignment_3.pdf',
@@ -45,19 +52,19 @@ const INITIAL_JOBS: PrintJob[] = [
     status: 'ready',
     createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-    pickupCounter: 'Counter 2',
+    pickupCounter: 'AIT Xerox Shop',
     estimatedPickupTime: 'Ready for pickup',
     statusHistory: [
       { status: 'submitted', timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString() },
       { status: 'processing', timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(), note: 'Printing started' },
-      { status: 'ready', timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(), note: 'Printed and stapled. Kept at Counter 2.' }
+      { status: 'ready', timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(), note: 'Printed and stapled. Kept at AIT Xerox Shop.' }
     ]
   },
   {
-    id: 'XER-2024-8842',
+    id: 'B204',
     studentId: 'usr-student-01',
     studentName: 'Rohan Sharma',
-    studentRoll: '2024CS1092',
+    studentRoll: '250222',
     studentPhone: '+91 98765 43210',
     department: 'Computer Science & Engineering',
     fileName: 'Project_Synopsis_Machine_Learning.pdf',
@@ -77,7 +84,7 @@ const INITIAL_JOBS: PrintJob[] = [
     status: 'processing',
     createdAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    pickupCounter: 'Counter 1',
+    pickupCounter: 'AIT Xerox Shop',
     estimatedPickupTime: 'Within 15 minutes',
     statusHistory: [
       { status: 'submitted', timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString() },
@@ -85,10 +92,10 @@ const INITIAL_JOBS: PrintJob[] = [
     ]
   },
   {
-    id: 'XER-2024-8839',
+    id: 'C310',
     studentId: 'usr-student-02',
     studentName: 'Ananya Deshmukh',
-    studentRoll: '2024EE0441',
+    studentRoll: '250225',
     studentPhone: '+91 91234 56789',
     department: 'Electrical Engineering',
     fileName: 'Circuit_Simulation_Report.pdf',
@@ -98,6 +105,7 @@ const INITIAL_JOBS: PrintJob[] = [
     copies: 1,
     colorMode: 'bw',
     paperSize: 'A4',
+    paperType: 'plain',
     orientation: 'portrait',
     sides: 'single',
     binding: 'staple',
@@ -107,17 +115,17 @@ const INITIAL_JOBS: PrintJob[] = [
     status: 'submitted',
     createdAt: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
-    pickupCounter: 'Counter 1',
+    pickupCounter: 'AIT Xerox Shop',
     estimatedPickupTime: '20-25 minutes',
     statusHistory: [
       { status: 'submitted', timestamp: new Date(Date.now() - 12 * 60 * 1000).toISOString() }
     ]
   },
   {
-    id: 'XER-2024-8835',
+    id: 'D405',
     studentId: 'usr-student-01',
     studentName: 'Rohan Sharma',
-    studentRoll: '2024CS1092',
+    studentRoll: '250222',
     studentPhone: '+91 98765 43210',
     department: 'Computer Science & Engineering',
     fileName: 'Operating_Systems_Lecture_Notes_Unit1.pdf',
@@ -127,6 +135,7 @@ const INITIAL_JOBS: PrintJob[] = [
     copies: 1,
     colorMode: 'bw',
     paperSize: 'A4',
+    paperType: 'plain',
     orientation: 'portrait',
     sides: 'double',
     binding: 'spiral',
@@ -136,13 +145,13 @@ const INITIAL_JOBS: PrintJob[] = [
     status: 'completed',
     createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    pickupCounter: 'Counter 2',
+    pickupCounter: 'AIT Xerox Shop',
     estimatedPickupTime: 'Completed',
     statusHistory: [
       { status: 'submitted', timestamp: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString() },
       { status: 'processing', timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString() },
       { status: 'ready', timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() },
-      { status: 'completed', timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), note: 'Collected by student at Counter 2' }
+      { status: 'completed', timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), note: 'Collected by student at AIT Xerox Shop' }
     ]
   }
 ];
@@ -156,8 +165,8 @@ import {
   deleteStorageFileFromSupabase,
 } from './supabase';
 
-const STORAGE_KEY_JOBS = 'xeroxic_jobs_v2';
-const STORAGE_KEY_USER = 'xeroxic_active_user_v2';
+const STORAGE_KEY_JOBS = 'xeroxic_jobs_v3';
+const STORAGE_KEY_USER = 'xeroxic_active_user_v3';
 
 export function getStoredJobs(): PrintJob[] {
   try {

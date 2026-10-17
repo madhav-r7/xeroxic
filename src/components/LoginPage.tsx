@@ -58,7 +58,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
         id: 'usr-' + Date.now(),
         name: trimmed.includes('@') ? trimmed.split('@')[0] : trimmed,
         role: 'student',
-        studentId: trimmed.toUpperCase(),
+        studentId: trimmed || '250222',
         department: 'College Campus',
         email: trimmed.includes('@') ? trimmed : `${trimmed.toLowerCase()}@college.edu`,
         phone: '+91 98765 43210',
@@ -188,7 +188,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                   placeholder={
                     isAdminMode
                       ? 'admin or admin@college.edu'
-                      : 'e.g. 2024CS1092 or student@college.edu'
+                      : 'e.g. 250222 or student@college.edu'
                   }
                   className="w-full px-3.5 py-2.5 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
                 />
@@ -278,7 +278,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                   required
                   value={signupRoll}
                   onChange={(e) => setSignupRoll(e.target.value)}
-                  placeholder="e.g. 2024CS1092"
+                  placeholder="e.g. 250222"
                   className="w-full px-3 py-2 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors uppercase"
                 />
               </div>
@@ -339,6 +339,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
           <span>•</span>
           <span className="hover:underline cursor-pointer">Privacy</span>
         </div>
+      </div>
+
+      <div className="text-xs text-[#605e5c] py-2 flex flex-col items-center space-y-1">
+        <span className="font-semibold text-[#242424]">Xeroxic • ait xerox shop</span>
+        <span>Operating: 8:30 AM – 4:00 PM (Mon–Sat)</span>
       </div>
     </div>
   );

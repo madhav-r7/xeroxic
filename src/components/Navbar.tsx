@@ -23,15 +23,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="bg-white border-b border-[#e5e5e5] sticky top-0 z-40 select-none shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-      {/* Top Banner (clean, quiet, NO green/red symbols) */}
+      {/* Top Banner */}
       <div className="bg-[#f8f9fa] border-b border-[#ededed] text-[#605e5c] text-xs px-4 py-1.5 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <span className="font-semibold text-[#242424] tracking-wide">COLLEGE XEROX STATION</span>
-          <span>|</span>
-          <span>Library Ground Floor • Counter 1 & 2</span>
+          <span className="font-semibold text-[#242424] tracking-wide uppercase">ait xerox shop</span>
         </div>
         <div className="flex items-center space-x-3 text-xs">
-          <span>Operating: 8:30 AM – 7:30 PM (Mon–Sat)</span>
+          <span>Operating: 8:30 AM – 4:00 PM (Mon–Sat)</span>
         </div>
       </div>
 

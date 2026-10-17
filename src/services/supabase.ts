@@ -20,7 +20,7 @@ export function mapSupabaseToPrintJob(row: any): PrintJob {
     id: row.id,
     studentId: row.student_id || 'usr-student',
     studentName: row.student_name || 'Student',
-    studentRoll: row.student_roll || '2024CS0000',
+    studentRoll: row.student_roll || '250222',
     studentPhone: row.student_phone || '+91 98765 43210',
     department: row.department || 'Computer Science & Engineering',
     fileName: row.file_name || 'Document.pdf',
@@ -40,7 +40,7 @@ export function mapSupabaseToPrintJob(row: any): PrintJob {
     status: status,
     createdAt: row.created_at || new Date().toISOString(),
     updatedAt: row.created_at || new Date().toISOString(),
-    pickupCounter: 'Counter 1 & 2',
+    pickupCounter: 'AIT Xerox Shop',
     estimatedPickupTime: estimated,
     statusHistory: [
       {

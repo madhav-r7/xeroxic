@@ -203,7 +203,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <div className="space-y-1">
             <h3 className="text-lg font-semibold text-[#242424]">Need to submit an assignment today?</h3>
             <p className="text-xs sm:text-sm text-[#605e5c]">
-              Counter 1 and Counter 2 are located on the Library Ground Floor. Standard hours are 8:30 AM to 7:30 PM.
+              We are located at ait xerox shop. Standard operating hours are 8:30 AM to 4:00 PM (Mon–Sat).
             </p>
           </div>
           <div className="flex items-center space-x-3 shrink-0">
