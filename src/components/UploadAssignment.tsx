@@ -140,7 +140,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
         ]
       };
 
-      addPrintJob(newJob);
+      addPrintJob(newJob, selectedFile);
       setIsSubmitting(false);
       setSuccessJob(newJob);
     }, 600);

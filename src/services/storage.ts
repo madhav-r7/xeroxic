@@ -145,6 +145,13 @@ const INITIAL_JOBS: PrintJob[] = [
   }
 ];
 
+import {
+  fetchJobsFromSupabase,
+  insertJobToSupabase,
+  updateJobStatusInSupabase,
+  uploadAssignmentFile,
+} from './supabase';
+
 const STORAGE_KEY_JOBS = 'xeroxic_jobs_v2';
 const STORAGE_KEY_USER = 'xeroxic_active_user_v2';
 
@@ -170,6 +177,19 @@ export function saveStoredJobs(jobs: PrintJob[]): void {
   }
 }
 
+export async function syncJobsFromSupabase(): Promise<PrintJob[]> {
+  try {
+    const remote = await fetchJobsFromSupabase();
+    if (remote && remote.length > 0) {
+      saveStoredJobs(remote);
+      return remote;
+    }
+  } catch (err) {
+    console.warn('Supabase sync skipped, using local cache:', err);
+  }
+  return getStoredJobs();
+}
+
 export function getStoredUser(): User | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_USER);
@@ -193,20 +213,33 @@ export function saveStoredUser(user: User | null): void {
   }
 }
 
-export function addPrintJob(job: PrintJob): void {
+export function addPrintJob(job: PrintJob, file?: File | null): void {
+  // Update local storage first for instant feedback
   const jobs = getStoredJobs();
   const updated = [job, ...jobs];
   saveStoredJobs(updated);
+
+  // Sync to Supabase in background
+  (async () => {
+    let fileUrl: string | undefined = undefined;
+    if (file) {
+      const uploadedUrl = await uploadAssignmentFile(file, job.id);
+      if (uploadedUrl) {
+        fileUrl = uploadedUrl;
+      }
+    }
+    await insertJobToSupabase(job, fileUrl);
+  })().catch((err) => console.warn('Background Supabase insert error:', err));
 }
 
 export function updateJobStatus(jobId: string, newStatus: PrintJob['status'], note?: string): void {
   const jobs = getStoredJobs();
-  const updated = jobs.map(j => {
+  const updated = jobs.map((j) => {
     if (j.id === jobId) {
       const now = new Date().toISOString();
       const updatedHistory = [
         ...j.statusHistory,
-        { status: newStatus, timestamp: now, note }
+        { status: newStatus, timestamp: now, note },
       ];
       let estimated = j.estimatedPickupTime;
       if (newStatus === 'processing') estimated = 'Printing now (~10 mins)';
@@ -219,10 +252,15 @@ export function updateJobStatus(jobId: string, newStatus: PrintJob['status'], no
         status: newStatus,
         updatedAt: now,
         estimatedPickupTime: estimated,
-        statusHistory: updatedHistory
+        statusHistory: updatedHistory,
       };
     }
     return j;
   });
   saveStoredJobs(updated);
+
+  // Sync to Supabase in background
+  updateJobStatusInSupabase(jobId, newStatus).catch((err) =>
+    console.warn('Background Supabase update error:', err)
+  );
 }

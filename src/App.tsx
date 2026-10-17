@@ -4,8 +4,10 @@ import {
   getStoredUser,
   saveStoredUser,
   getStoredJobs,
+  syncJobsFromSupabase,
   DEMO_STUDENT,
 } from './services/storage';
+import { subscribeToLiveJobs } from './services/supabase';
 import { Navbar } from './components/Navbar';
 import { HomeView } from './components/HomeView';
 import { LoginPage } from './components/LoginPage';
@@ -25,6 +27,26 @@ export function App() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab, showSignInModal]);
+
+  // Supabase initial sync and real-time subscription
+  useEffect(() => {
+    syncJobsFromSupabase().then((latest) => {
+      if (latest && latest.length > 0) {
+        setJobs(latest);
+      }
+    });
+
+    const unsubscribe = subscribeToLiveJobs(async () => {
+      const refreshed = await syncJobsFromSupabase();
+      if (refreshed && refreshed.length > 0) {
+        setJobs(refreshed);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Keep jobs and user in sync with localStorage and custom window events
   useEffect(() => {
