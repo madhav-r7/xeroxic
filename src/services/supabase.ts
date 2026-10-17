@@ -60,7 +60,7 @@ export function mapPrintJobToSupabase(job: PrintJob, fileUrl?: string): any {
     student_phone: job.studentPhone,
     department: job.department,
     file_name: job.fileName,
-    file_url: fileUrl || `https://tjmwwnheuphnrxyxkvhx.supabase.co/storage/v1/object/public/assignments/${job.id}_${encodeURIComponent(job.fileName)}`,
+    file_url: fileUrl || `https://tjmwwnheuphnrxyxkvhx.supabase.co/storage/v1/object/public/assignment/${job.id}_${encodeURIComponent(job.fileName)}`,
     file_size: job.fileSize,
     page_count: job.pageCount,
     copies: job.copies,
@@ -78,7 +78,7 @@ export async function uploadAssignmentFile(file: File, jobId: string): Promise<s
     const fileExt = file.name.split('.').pop();
     const filePath = `${jobId}_${Date.now()}.${fileExt}`;
     const { error: uploadError } = await supabase.storage
-      .from('assignments')
+      .from('assignment')
       .upload(filePath, file);
 
     if (uploadError) {
@@ -86,7 +86,7 @@ export async function uploadAssignmentFile(file: File, jobId: string): Promise<s
       return null;
     }
 
-    const { data } = supabase.storage.from('assignments').getPublicUrl(filePath);
+    const { data } = supabase.storage.from('assignment').getPublicUrl(filePath);
     return data.publicUrl;
   } catch (err) {
     console.warn('Could not upload file to Supabase storage:', err);
