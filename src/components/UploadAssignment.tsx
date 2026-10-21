@@ -333,70 +333,70 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
   if (successJob) {
     return (
       <div className="max-w-3xl mx-auto py-10 px-4">
-        <div className="bg-white border border-[#e1dfdd] rounded-lg p-8 shadow-sm text-left">
-          <div className="flex items-center space-x-3 pb-5 border-b border-[#edebe9]">
-            <div className="w-12 h-12 rounded-full bg-[#107c10]/15 text-[#107c10] flex items-center justify-center">
+        <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-8 shadow-card text-left">
+          <div className="flex items-center space-x-3 pb-5 border-b border-bone">
+            <div className="w-12 h-12 rounded-full bg-status-ready/15 text-status-ready flex items-center justify-center">
               <Check className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-[#242424]">Print Request Received!</h2>
-              <p className="text-xs text-[#605e5c]">
+              <h2 className="text-xl font-semibold text-aubergine-ink">Print Request Received!</h2>
+              <p className="text-xs text-warm-ash">
                 Your single merged PDF has been sent to the AIT Xerox operator desk.
               </p>
             </div>
           </div>
 
           {/* Token ID Highlight */}
-          <div className="my-6 p-5 bg-[#f3f2f1] border border-[#e1dfdd] rounded-md grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="my-6 p-5 bg-linen border border-bone rounded-[16px] grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <div className="text-[11px] font-semibold text-[#605e5c] uppercase">Your Token ID</div>
-              <div className="text-2xl font-bold text-[#0067b8] mt-1 tracking-wider font-mono">
+              <div className="text-[11px] font-semibold text-warm-ash uppercase">Your Token ID</div>
+              <div className="text-2xl font-bold text-espresso mt-1 tracking-wider font-mono">
                 {successJob.id}
               </div>
-              <div className="text-[11px] text-[#797775] mt-0.5">Show this token at pickup</div>
+              <div className="text-[11px] text-stone mt-0.5">Show this token at pickup</div>
             </div>
             <div>
-              <div className="text-[11px] font-semibold text-[#605e5c] uppercase">Pickup Counter</div>
-              <div className="text-base font-semibold text-[#242424] mt-1">
+              <div className="text-[11px] font-semibold text-warm-ash uppercase">Pickup Counter</div>
+              <div className="text-base font-semibold text-aubergine-ink mt-1">
                 {successJob.pickupCounter}
               </div>
-              <div className="text-[11px] text-[#797775]">Library Ground Floor</div>
+              <div className="text-[11px] text-stone">Library Ground Floor</div>
             </div>
             <div>
-              <div className="text-[11px] font-semibold text-[#605e5c] uppercase">Estimated Time</div>
-              <div className="text-base font-semibold text-[#107c10] mt-1">
+              <div className="text-[11px] font-semibold text-warm-ash uppercase">Estimated Time</div>
+              <div className="text-base font-semibold text-status-ready mt-1">
                 {successJob.estimatedPickupTime}
               </div>
-              <div className="text-[11px] text-[#797775]">
+              <div className="text-[11px] text-stone">
                 Amount: ₹{successJob.cost} ({successJob.paymentMethod === 'upi' ? 'UPI' : 'Pay at Counter'})
               </div>
             </div>
           </div>
 
           {/* Order Details */}
-          <div className="space-y-3 text-xs text-[#323130] pb-6 border-b border-[#edebe9]">
-            <div className="font-semibold text-sm text-[#242424]">Print Specifications</div>
+          <div className="space-y-3 text-xs text-aubergine-ink pb-6 border-b border-bone">
+            <div className="font-semibold text-sm text-aubergine-ink">Print Specifications</div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="bg-[#faf9f8] p-2.5 border border-[#e1dfdd] rounded">
-                <span className="text-[#605e5c] block text-[11px]">Merged PDF:</span>
+              <div className="bg-linen p-2.5 border border-bone rounded-[12px]">
+                <span className="text-warm-ash block text-[11px]">Merged PDF:</span>
                 <span className="font-medium truncate block" title={successJob.fileName}>
                   {successJob.fileName}
                 </span>
               </div>
-              <div className="bg-[#faf9f8] p-2.5 border border-[#e1dfdd] rounded">
-                <span className="text-[#605e5c] block text-[11px]">Pages & Copies:</span>
+              <div className="bg-linen p-2.5 border border-bone rounded-[12px]">
+                <span className="text-warm-ash block text-[11px]">Pages & Copies:</span>
                 <span className="font-medium">
                   {successJob.pageCount} pgs × {successJob.copies} {successJob.copies > 1 ? 'copies' : 'copy'}
                 </span>
               </div>
-              <div className="bg-[#faf9f8] p-2.5 border border-[#e1dfdd] rounded">
-                <span className="text-[#605e5c] block text-[11px]">Color & Sides:</span>
+              <div className="bg-linen p-2.5 border border-bone rounded-[12px]">
+                <span className="text-warm-ash block text-[11px]">Color & Sides:</span>
                 <span className="font-medium">
                   {successJob.colorMode === 'color' ? 'Color' : 'B&W'} ({successJob.sides === 'double' ? 'Duplex' : 'Single Sided'})
                 </span>
               </div>
-              <div className="bg-[#faf9f8] p-2.5 border border-[#e1dfdd] rounded">
-                <span className="text-[#605e5c] block text-[11px]">Paper Type:</span>
+              <div className="bg-linen p-2.5 border border-bone rounded-[12px]">
+                <span className="text-warm-ash block text-[11px]">Paper Type:</span>
                 <span className="font-medium">
                   {successJob.paperType === 'photo' ? 'Photo Paper' : 'Plain Paper'}
                 </span>
@@ -411,14 +411,14 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                 setSuccessJob(null);
                 handleClearAll();
               }}
-              className="w-full sm:w-auto px-4 py-2 border border-[#8a8886] hover:bg-[#f3f2f1] text-[#242424] text-xs font-semibold rounded transition-colors"
+              className="w-full sm:w-auto px-4 py-2 border border-outline/40 hover:bg-bone text-aubergine-ink text-xs font-semibold rounded-full transition-colors"
             >
               Upload Another Assignment
             </button>
             <button
               type="button"
               onClick={() => onJobCreated(successJob)}
-              className="w-full sm:w-auto px-5 py-2 bg-[#0067b8] hover:bg-[#005da6] text-white text-xs font-semibold rounded transition-colors flex items-center justify-center space-x-1.5 shadow-sm"
+              className="w-full sm:w-auto px-5 py-2 bg-espresso hover:bg-espresso/90 text-paper-white text-xs font-semibold rounded-full transition-colors flex items-center justify-center space-x-1.5 shadow-sm"
             >
               <Clock className="w-4 h-4" />
               <span>Track Live Status</span>
@@ -434,23 +434,23 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
     return (
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 text-left">
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center space-x-2 text-xs text-[#605e5c] mb-4">
+        <div className="flex items-center space-x-2 text-xs text-warm-ash mb-4">
           <button
             onClick={() => setCurrentStep('configure')}
-            className="flex items-center space-x-1 hover:text-[#0067b8]"
+            className="flex items-center space-x-1 hover:text-espresso"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Print Options</span>
           </button>
           <span>/</span>
-          <span className="font-semibold text-[#242424]">Checkout & Payment</span>
+          <span className="font-semibold text-aubergine-ink">Checkout & Payment</span>
         </div>
 
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-[#242424] tracking-tight">
+          <h1 className="text-2xl font-semibold text-aubergine-ink tracking-tight">
             Review Order & Payment
           </h1>
-          <p className="text-xs text-[#605e5c] mt-0.5">
+          <p className="text-xs text-warm-ash mt-0.5">
             Complete payment or choose pay at counter to send your print request to the operator desk
           </p>
         </div>
@@ -459,63 +459,60 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Column: Payment Options (7 cols) */}
             <div className="lg:col-span-7 space-y-4">
-              <div className="bg-white border border-[#e1dfdd] rounded-lg p-5 shadow-sm space-y-4">
-                <h2 className="text-sm font-semibold text-[#242424] pb-2 border-b border-[#edebe9]">
+              <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-5 shadow-card space-y-4">
+                <h2 className="text-sm font-semibold text-aubergine-ink pb-2 border-b border-bone">
                   Select Payment Method
                 </h2>
 
                 {/* Option 1: Instant UPI QR Code */}
                 <div
                   onClick={() => setPaymentMethod('upi')}
-                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  className={`p-4 rounded-[16px] cursor-pointer transition-all ${
                     paymentMethod === 'upi'
-                      ? 'border-[#0067b8] bg-[#e6f2fb]/30'
-                      : 'border-[#edebe9] hover:border-[#a19f9d] bg-white'
+                      ? 'ring-2 ring-espresso bg-bone/20'
+                      : 'ring-1 ring-black/[0.06] hover:ring-outline/40 bg-paper-white'
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-md bg-[#0067b8]/10 text-[#0067b8] flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-[12px] bg-bone text-espresso flex items-center justify-center">
                         <QrCode className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-[#242424]">
+                        <div className="text-sm font-semibold text-aubergine-ink">
                           Instant UPI Payment (QR Code)
                         </div>
-                        <div className="text-xs text-[#605e5c] mt-0.5">
+                        <div className="text-xs text-warm-ash mt-0.5">
                           Pay using GPay, PhonePe, Paytm, or BHIM
                         </div>
                       </div>
                     </div>
-                    {paymentMethod === 'upi' && <Check className="w-5 h-5 text-[#0067b8]" />}
+                    {paymentMethod === 'upi' && <Check className="w-5 h-5 text-espresso" />}
                   </div>
 
                   {paymentMethod === 'upi' && (
-                    <div className="mt-4 pt-4 border-t border-[#edebe9] space-y-3">
-                      <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-3.5 border border-[#e1dfdd] rounded-md">
+                    <div className="mt-4 pt-4 border-t border-bone space-y-3">
+                      <div className="flex flex-col sm:flex-row items-center gap-4 bg-linen p-3.5 border border-bone rounded-[12px]">
                         {/* Mock UPI QR Graphic */}
-                        <div className="w-32 h-32 shrink-0 bg-white border border-[#242424] p-2 flex flex-col items-center justify-center rounded">
+                        <div className="w-32 h-32 shrink-0 bg-paper-white border border-aubergine-ink/20 p-2 flex flex-col items-center justify-center rounded-[12px]">
                           <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
                             <rect width="100" height="100" fill="#ffffff" />
                             <rect x="10" y="10" width="25" height="25" fill="#000" />
                             <rect x="15" y="15" width="15" height="15" fill="#fff" />
                             <rect x="18" y="18" width="9" height="9" fill="#000" />
-
                             <rect x="65" y="10" width="25" height="25" fill="#000" />
                             <rect x="70" y="15" width="15" height="15" fill="#fff" />
                             <rect x="73" y="18" width="9" height="9" fill="#000" />
-
                             <rect x="10" y="65" width="25" height="25" fill="#000" />
                             <rect x="15" y="70" width="15" height="15" fill="#fff" />
                             <rect x="18" y="73" width="9" height="9" fill="#000" />
-
                             <rect x="42" y="12" width="6" height="6" fill="#000" />
                             <rect x="52" y="12" width="6" height="6" fill="#000" />
                             <rect x="42" y="22" width="6" height="6" fill="#000" />
                             <rect x="42" y="32" width="16" height="6" fill="#000" />
                             <rect x="12" y="42" width="16" height="6" fill="#000" />
                             <rect x="32" y="42" width="6" height="16" fill="#000" />
-                            <rect x="42" y="42" width="16" height="16" fill="#0067b8" />
+                            <rect x="42" y="42" width="16" height="16" fill="#160f0c" />
                             <rect x="62" y="42" width="6" height="6" fill="#000" />
                             <rect x="72" y="42" width="16" height="6" fill="#000" />
                             <rect x="62" y="52" width="16" height="6" fill="#000" />
@@ -526,20 +523,20 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                         </div>
 
                         <div className="text-xs space-y-1.5 flex-1">
-                          <div className="text-[11px] font-semibold text-[#605e5c] uppercase">Scan & Pay</div>
-                          <div className="text-base font-bold text-[#0067b8]">₹{totalCost}.00</div>
-                          <div className="text-xs text-[#242424]">
+                          <div className="text-[11px] font-semibold text-warm-ash uppercase">Scan & Pay</div>
+                          <div className="text-base font-bold text-espresso">₹{totalCost}.00</div>
+                          <div className="text-xs text-aubergine-ink">
                             UPI ID: <span className="font-mono font-semibold">ait.xerox@upi</span>
                           </div>
-                          <div className="text-[11px] text-[#605e5c] flex items-center space-x-1 pt-1">
-                            <ShieldCheck className="w-3.5 h-3.5 text-[#107c10]" />
+                          <div className="text-[11px] text-warm-ash flex items-center space-x-1 pt-1">
+                            <ShieldCheck className="w-3.5 h-3.5 text-status-ready" />
                             <span>Verified AIT Xerox Shop</span>
                           </div>
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-[#374151] mb-1">
+                        <label className="block text-xs font-medium text-aubergine-ink mb-1">
                           UTR / Transaction Ref No. (Optional)
                         </label>
                         <input
@@ -547,7 +544,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                           value={utrNumber}
                           onChange={(e) => setUtrNumber(e.target.value)}
                           placeholder="e.g. 429183019283 (from UPI app)"
-                          className="w-full px-3 py-2 text-xs border border-[#8a8886] rounded focus:outline-none focus:border-[#0067b8]"
+                          className="w-full px-3 py-2 text-xs border border-outline/40 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none bg-paper-white"
                         />
                       </div>
                     </div>
@@ -557,35 +554,35 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                 {/* Option 2: Pay at Counter */}
                 <div
                   onClick={() => setPaymentMethod('counter')}
-                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  className={`p-4 rounded-[16px] cursor-pointer transition-all ${
                     paymentMethod === 'counter'
-                      ? 'border-[#0067b8] bg-[#e6f2fb]/30'
-                      : 'border-[#edebe9] hover:border-[#a19f9d] bg-white'
+                      ? 'ring-2 ring-espresso bg-bone/20'
+                      : 'ring-1 ring-black/[0.06] hover:ring-outline/40 bg-paper-white'
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-md bg-[#107c10]/10 text-[#107c10] flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-[12px] bg-status-ready/10 text-status-ready flex items-center justify-center">
                         <Banknote className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-[#242424]">
+                        <div className="text-sm font-semibold text-aubergine-ink">
                           Pay at Counter on Pickup
                         </div>
-                        <div className="text-xs text-[#605e5c] mt-0.5">
+                        <div className="text-xs text-warm-ash mt-0.5">
                           Pay cash or scan shop QR when collecting printed sheets
                         </div>
                       </div>
                     </div>
-                    {paymentMethod === 'counter' && <Check className="w-5 h-5 text-[#0067b8]" />}
+                    {paymentMethod === 'counter' && <Check className="w-5 h-5 text-espresso" />}
                   </div>
 
                   {paymentMethod === 'counter' && (
-                    <div className="mt-3 pt-3 border-t border-[#edebe9] text-xs text-[#605e5c] space-y-1">
+                    <div className="mt-3 pt-3 border-t border-bone text-xs text-warm-ash space-y-1">
                       <p>
-                        Your order will be printed and kept ready at <strong>AIT Xerox Shop</strong> (Library Ground Floor).
+                        Your order will be printed and kept ready at <strong className="text-aubergine-ink">AIT Xerox Shop</strong> (Library Ground Floor).
                       </p>
-                      <p className="text-[#107c10] font-medium">
+                      <p className="text-status-ready font-medium">
                         Pay ₹{totalCost}.00 in cash or via UPI when handing your Token ID.
                       </p>
                     </div>
@@ -596,58 +593,58 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
 
             {/* Right Column: Order Summary & Checkout Button (5 cols) */}
             <div className="lg:col-span-5 space-y-4">
-              <div className="bg-white border border-[#e1dfdd] rounded-lg p-5 shadow-sm space-y-4">
-                <h3 className="text-sm font-semibold text-[#242424] pb-2 border-b border-[#edebe9]">
+              <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-5 shadow-card space-y-4">
+                <h3 className="text-sm font-semibold text-aubergine-ink pb-2 border-b border-bone">
                   Order Summary
                 </h3>
 
                 {/* Document summary */}
-                <div className="p-3 bg-[#faf9f8] border border-[#e1dfdd] rounded space-y-1.5 text-xs">
-                  <div className="font-semibold text-[#242424] truncate" title={fileName}>
+                <div className="p-3 bg-linen border border-bone rounded-[12px] space-y-1.5 text-xs">
+                  <div className="font-semibold text-aubergine-ink truncate" title={fileName}>
                     {fileName}
                   </div>
-                  <div className="text-[#605e5c] flex items-center space-x-2">
+                  <div className="text-warm-ash flex items-center space-x-2">
                     <span>{fileList.length} source file(s)</span>
                     <span>•</span>
-                    <span className="font-semibold text-[#0067b8]">{pageCount} total pages</span>
+                    <span className="font-semibold text-espresso">{pageCount} total pages</span>
                     <span>•</span>
                     <span>{fileSize}</span>
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs py-2 border-b border-[#edebe9]">
-                  <div className="flex justify-between text-[#605e5c]">
+                <div className="space-y-2 text-xs py-2 border-b border-bone">
+                  <div className="flex justify-between text-warm-ash">
                     <span>
                       Printing ({pageCount} pgs × {copies} × ₹{perPageRate})
                     </span>
-                    <span className="font-medium text-[#242424]">₹{pagesCost}.00</span>
+                    <span className="font-medium text-aubergine-ink">₹{pagesCost}.00</span>
                   </div>
 
                   {photoPaperFee > 0 && (
-                    <div className="flex justify-between text-[#605e5c]">
+                    <div className="flex justify-between text-warm-ash">
                       <span>Photo Paper Finish</span>
-                      <span className="font-medium text-[#242424]">₹{photoPaperFee}.00</span>
+                      <span className="font-medium text-aubergine-ink">₹{photoPaperFee}.00</span>
                     </div>
                   )}
 
                   {urgentFee > 0 && (
-                    <div className="flex justify-between text-[#605e5c]">
+                    <div className="flex justify-between text-warm-ash">
                       <span>Urgent Priority Fee</span>
-                      <span className="font-medium text-[#242424]">+₹10.00</span>
+                      <span className="font-medium text-aubergine-ink">+₹10.00</span>
                     </div>
                   )}
                 </div>
 
                 <div className="flex justify-between items-baseline pt-1">
-                  <span className="text-sm font-semibold text-[#242424]">Total Payable</span>
-                  <span className="text-2xl font-bold text-[#0067b8]">₹{totalCost}.00</span>
+                  <span className="text-sm font-semibold text-aubergine-ink">Total Payable</span>
+                  <span className="text-2xl font-bold text-espresso">₹{totalCost}.00</span>
                 </div>
 
                 <div className="pt-2">
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-2.5 px-4 bg-[#0067b8] hover:bg-[#005da6] active:bg-[#004e8c] text-white text-xs font-semibold rounded transition-colors flex items-center justify-center space-x-2 shadow-sm disabled:bg-[#a19f9d]"
+                    className="w-full py-2.5 px-4 bg-espresso hover:bg-espresso/90 active:bg-espresso/80 text-paper-white text-xs font-semibold rounded-full transition-colors flex items-center justify-center space-x-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <>
@@ -665,7 +662,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                   <button
                     type="button"
                     onClick={() => setCurrentStep('configure')}
-                    className="w-full mt-2 py-2 text-xs text-[#605e5c] hover:text-[#242424] hover:underline text-center"
+                    className="w-full mt-2 py-2 text-xs text-warm-ash hover:text-aubergine-ink hover:underline text-center"
                   >
                     Edit Print Options
                   </button>
@@ -683,10 +680,10 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
     <div className="max-w-5xl mx-auto py-6 px-4 sm:px-6 text-left">
       {/* Title section */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-[#242424] tracking-tight">
+        <h1 className="text-2xl font-semibold text-aubergine-ink tracking-tight">
           New Print Order
         </h1>
-        <p className="text-xs text-[#605e5c] mt-0.5">
+        <p className="text-xs text-warm-ash mt-0.5">
           Upload single or multiple files (PDFs, JPGs, PNGs). They will be automatically merged into one print-ready PDF.
         </p>
       </div>
@@ -695,19 +692,19 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
         {/* Left Column: Upload Dropzone, File List & Print Options (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
           {/* STEP 1: MULTI-FILE UPLOADER & MERGER */}
-          <div className="bg-white border border-[#e1dfdd] rounded-lg p-5 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-[#edebe9]">
+          <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-5 shadow-card space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-bone">
               <div className="flex items-center space-x-2">
-                <span className="w-5 h-5 rounded-full bg-[#0067b8] text-white text-xs font-semibold flex items-center justify-center">
+                <span className="w-5 h-5 rounded-full bg-espresso text-paper-white text-xs font-semibold flex items-center justify-center">
                   1
                 </span>
-                <h2 className="text-sm font-semibold text-[#242424]">Document & File Upload</h2>
+                <h2 className="text-sm font-semibold text-aubergine-ink">Document & File Upload</h2>
               </div>
               {fileList.length === 0 && (
                 <button
                   type="button"
                   onClick={handleUseSampleFile}
-                  className="text-xs text-[#0067b8] hover:underline font-medium"
+                  className="text-xs text-espresso hover:underline font-medium"
                 >
                   Load Sample Document
                 </button>
@@ -720,22 +717,22 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-colors ${
+              className={`border-2 border-dashed rounded-[16px] p-6 sm:p-8 text-center transition-colors ${
                 dragActive
-                  ? 'border-[#0067b8] bg-[#e6f2fb]/40'
-                  : 'border-[#c8c6c4] hover:border-[#8a8886] bg-[#faf9f8]'
+                  ? 'border-espresso bg-bone/30'
+                  : 'border-outline-variant hover:border-outline bg-linen'
               }`}
             >
-              <div className="w-11 h-11 mx-auto mb-2 rounded-full bg-[#e6f2fb] text-[#0067b8] flex items-center justify-center">
+              <div className="w-11 h-11 mx-auto mb-2 rounded-full bg-bone text-espresso flex items-center justify-center">
                 <Upload className="w-5 h-5" />
               </div>
-              <div className="text-sm font-semibold text-[#242424]">
+              <div className="text-sm font-semibold text-aubergine-ink">
                 {fileList.length === 0 ? 'Drag and drop your files here' : 'Drag and drop more files here'}
               </div>
-              <p className="text-xs text-[#605e5c] mt-1 mb-3">
+              <p className="text-xs text-warm-ash mt-1 mb-3">
                 Upload multiple <strong>PDF, JPG, JPEG, or PNG</strong> files (Max 50 MB total, up to 1,000 pages).
               </p>
-              <label className="inline-flex items-center justify-center px-4 py-2 bg-[#0067b8] hover:bg-[#005da6] text-white text-xs font-semibold rounded cursor-pointer transition-colors shadow-sm">
+              <label className="inline-flex items-center justify-center px-4 py-2 bg-espresso hover:bg-espresso/90 text-paper-white text-xs font-semibold rounded-full cursor-pointer transition-colors shadow-sm">
                 <Plus className="w-3.5 h-3.5 mr-1" />
                 <span>{fileList.length === 0 ? 'Select Files from Device' : 'Add More Files'}</span>
                 <input
@@ -750,7 +747,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
 
             {/* Error Banner */}
             {mergeError && (
-              <div className="p-3 bg-[#fdf3f2] border border-[#f1707a] rounded text-xs text-[#a80000] flex items-start space-x-2">
+              <div className="p-3 bg-status-queued/10 border border-status-queued/30 rounded-[12px] text-xs text-status-queued flex items-start space-x-2">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-semibold block">PDF Merging Error</span>
@@ -763,11 +760,11 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
             {fileList.length > 0 && (
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-[#242424]">
+                  <span className="font-semibold text-aubergine-ink">
                     Queued Files ({fileList.length}) — Merged in this order:
                   </span>
                   <div className="flex items-center space-x-3">
-                    <label className="text-[#0067b8] hover:underline font-semibold cursor-pointer flex items-center space-x-1">
+                    <label className="text-espresso hover:underline font-semibold cursor-pointer flex items-center space-x-1">
                       <Plus className="w-3 h-3" />
                       <span>Add More</span>
                       <input
@@ -781,7 +778,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                     <button
                       type="button"
                       onClick={handleClearAll}
-                      className="text-[#d83b01] hover:underline font-medium"
+                      className="text-status-queued hover:underline font-medium"
                     >
                       Clear All
                     </button>
@@ -794,20 +791,20 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                     return (
                       <div
                         key={item.id}
-                        className="p-2.5 bg-[#f3f2f1] hover:bg-[#edebe9] border border-[#e1dfdd] rounded flex items-center justify-between transition-colors text-xs"
+                        className="p-2.5 bg-linen hover:bg-bone border border-bone rounded-[12px] flex items-center justify-between transition-colors text-xs"
                       >
                         <div className="flex items-center space-x-2.5 overflow-hidden flex-1 mr-2">
-                          <span className="w-5 h-5 rounded bg-white text-[#605e5c] border border-[#c8c6c4] font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
+                          <span className="w-5 h-5 rounded-full bg-paper-white text-warm-ash border border-outline-variant font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
                             {idx + 1}
                           </span>
-                          <div className="w-7 h-7 rounded bg-white border border-[#e1dfdd] text-[#0067b8] flex items-center justify-center shrink-0">
-                            {isPdf ? <FileText className="w-4 h-4 text-[#d83b01]" /> : <ImageIcon className="w-4 h-4 text-[#0067b8]" />}
+                          <div className="w-7 h-7 rounded-[8px] bg-paper-white border border-bone text-espresso flex items-center justify-center shrink-0">
+                            {isPdf ? <FileText className="w-4 h-4 text-status-queued" /> : <ImageIcon className="w-4 h-4 text-status-printing" />}
                           </div>
                           <div className="truncate">
-                            <span className="font-semibold text-[#242424] block truncate" title={item.name}>
+                            <span className="font-semibold text-aubergine-ink block truncate" title={item.name}>
                               {item.name}
                             </span>
-                            <span className="text-[10px] text-[#797775]">
+                            <span className="text-[10px] text-stone">
                               {item.sizeFormatted} • {isPdf ? 'PDF document' : 'Image (aspect ratio kept on page)'}
                             </span>
                           </div>
@@ -819,7 +816,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                             type="button"
                             onClick={() => handleMoveFile(idx, 'up')}
                             disabled={idx === 0 || isMerging}
-                            className="p-1 rounded hover:bg-white text-[#605e5c] disabled:opacity-30 disabled:hover:bg-transparent"
+                            className="p-1 rounded-full hover:bg-paper-white text-warm-ash disabled:opacity-30 disabled:hover:bg-transparent"
                             title="Move Up"
                           >
                             <ArrowUp className="w-3.5 h-3.5" />
@@ -828,7 +825,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                             type="button"
                             onClick={() => handleMoveFile(idx, 'down')}
                             disabled={idx === fileList.length - 1 || isMerging}
-                            className="p-1 rounded hover:bg-white text-[#605e5c] disabled:opacity-30 disabled:hover:bg-transparent"
+                            className="p-1 rounded-full hover:bg-paper-white text-warm-ash disabled:opacity-30 disabled:hover:bg-transparent"
                             title="Move Down"
                           >
                             <ArrowDown className="w-3.5 h-3.5" />
@@ -837,7 +834,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                             type="button"
                             onClick={() => handleRemoveFile(item.id)}
                             disabled={isMerging}
-                            className="p-1 rounded hover:bg-[#fdf3f2] text-[#a19f9d] hover:text-[#d83b01] ml-1 transition-colors"
+                            className="p-1 rounded-full hover:bg-status-queued/10 text-stone hover:text-status-queued ml-1 transition-colors"
                             title="Remove File"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -851,21 +848,21 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                 {/* Merged PDF Status Bar */}
                 <div className="pt-2">
                   {isMerging ? (
-                    <div className="p-3 bg-[#e6f2fb] border border-[#0067b8]/30 rounded text-xs text-[#0067b8] flex items-center space-x-2">
+                    <div className="p-3 bg-bone border border-outline-variant rounded-[12px] text-xs text-espresso flex items-center space-x-2">
                       <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                       <span>Merging {fileList.length} files client-side with pdf-lib into single PDF...</span>
                     </div>
                   ) : mergedFile ? (
-                    <div className="p-3 bg-[#dff6dd] border border-[#a2e6a0] rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+                    <div className="p-3 bg-status-ready/10 border border-status-ready/30 rounded-[12px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
                       <div className="flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 text-[#107c10] shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-status-ready shrink-0" />
                         <div>
-                          <div className="font-semibold text-[#107c10] flex items-center space-x-1.5">
+                          <div className="font-semibold text-status-ready flex items-center space-x-1.5">
                             <span>Ready to Print: Single Merged PDF</span>
-                            <span className="text-[11px] font-normal text-[#242424]">({fileSize})</span>
+                            <span className="text-[11px] font-normal text-aubergine-ink">({fileSize})</span>
                           </div>
-                          <div className="text-[11px] text-[#605e5c]">
-                            Actual page count: <strong className="text-[#0067b8] font-bold">{pageCount} pages</strong> (Images fitted to A4 preserving aspect ratio)
+                          <div className="text-[11px] text-warm-ash">
+                            Actual page count: <strong className="text-espresso font-bold">{pageCount} pages</strong> (Images fitted to A4 preserving aspect ratio)
                           </div>
                         </div>
                       </div>
@@ -873,7 +870,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                       <button
                         type="button"
                         onClick={handlePreviewMergedPdf}
-                        className="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-[#f3f2f1] text-[#0067b8] border border-[#0067b8]/40 rounded font-semibold text-xs shadow-sm transition-colors"
+                        className="inline-flex items-center space-x-1 px-2.5 py-1 bg-paper-white hover:bg-bone text-espresso border border-espresso/20 rounded-full font-semibold text-xs shadow-sm transition-colors"
                         title="Preview generated PDF in browser"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -888,21 +885,21 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
 
           {/* STEP 2: PRINT SPECIFICATIONS (SHOWN AFTER FILES ADDED) */}
           {fileList.length > 0 && (
-            <div className="bg-white border border-[#e1dfdd] rounded-lg p-5 shadow-sm space-y-5 animate-fadeIn">
-              <div className="flex items-center space-x-2 pb-2 border-b border-[#edebe9]">
-                <span className="w-5 h-5 rounded-full bg-[#0067b8] text-white text-xs font-semibold flex items-center justify-center">
+            <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-5 shadow-card space-y-5">
+              <div className="flex items-center space-x-2 pb-2 border-b border-bone">
+                <span className="w-5 h-5 rounded-full bg-espresso text-paper-white text-xs font-semibold flex items-center justify-center">
                   2
                 </span>
-                <h2 className="text-sm font-semibold text-[#242424]">Print Specifications</h2>
+                <h2 className="text-sm font-semibold text-aubergine-ink">Print Specifications</h2>
               </div>
 
               {/* Number of Pages to Print (Actual page count from merged PDF) */}
-              <div className="p-3 bg-[#faf9f8] border border-[#edebe9] rounded-md flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center space-x-2 text-[#242424]">
-                  <Info className="w-4 h-4 text-[#0067b8]" />
+              <div className="p-3 bg-linen border border-bone rounded-[12px] flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center space-x-2 text-aubergine-ink">
+                  <Info className="w-4 h-4 text-espresso" />
                   <div>
                     <span className="font-semibold">Actual Merged Page Count:</span>
-                    <span className="text-[#605e5c] text-[11px] block">
+                    <span className="text-warm-ash text-[11px] block">
                       Calculated directly from the merged PDF ({pageCount} {pageCount === 1 ? 'page' : 'pages'})
                     </span>
                   </div>
@@ -914,48 +911,48 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                     max={MAX_PAGE_COUNT}
                     value={pageCount}
                     onChange={(e) => setPageCount(Math.max(1, Math.min(MAX_PAGE_COUNT, parseInt(e.target.value) || 1)))}
-                    className="w-20 px-2 py-1.5 border border-[#8a8886] rounded text-sm text-center font-semibold focus:outline-none focus:border-[#0067b8] bg-white"
+                    className="w-20 px-2 py-1.5 border border-outline/40 rounded-[12px] text-sm text-center font-semibold focus:ring-2 focus:ring-espresso focus:outline-none bg-paper-white"
                   />
-                  <span className="text-[#605e5c] font-medium">pages</span>
+                  <span className="text-warm-ash font-medium">pages</span>
                 </div>
               </div>
 
               {/* Color Mode */}
               <div>
-                <label className="block text-xs font-semibold text-[#242424] mb-2">
+                <label className="block text-xs font-semibold text-aubergine-ink mb-2">
                   Color Mode
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div
                     onClick={() => setColorMode('bw')}
-                    className={`p-3 rounded-md border-2 cursor-pointer transition-all flex items-start justify-between ${
+                    className={`p-3 rounded-[16px] cursor-pointer transition-all flex items-start justify-between ${
                       colorMode === 'bw'
-                        ? 'border-[#0067b8] bg-[#e6f2fb]/40'
-                        : 'border-[#edebe9] hover:border-[#a19f9d] bg-white'
+                        ? 'ring-2 ring-espresso bg-linen/50'
+                        : 'ring-1 ring-black/[0.06] hover:ring-outline/40 bg-paper-white'
                     }`}
                   >
                     <div>
-                      <div className="text-xs font-semibold text-[#242424]">Black & White</div>
-                      <div className="text-[11px] text-[#605e5c] mt-0.5">Assignments, notes & reports</div>
-                      <div className="text-xs font-bold text-[#0067b8] mt-1">₹2.00 / page</div>
+                      <div className="text-xs font-semibold text-aubergine-ink">Black & White</div>
+                      <div className="text-[11px] text-warm-ash mt-0.5">Assignments, notes & reports</div>
+                      <div className="text-xs font-bold text-espresso mt-1">₹2.00 / page</div>
                     </div>
-                    {colorMode === 'bw' && <Check className="w-4 h-4 text-[#0067b8]" />}
+                    {colorMode === 'bw' && <Check className="w-4 h-4 text-espresso" />}
                   </div>
 
                   <div
                     onClick={() => setColorMode('color')}
-                    className={`p-3 rounded-md border-2 cursor-pointer transition-all flex items-start justify-between ${
+                    className={`p-3 rounded-[16px] cursor-pointer transition-all flex items-start justify-between ${
                       colorMode === 'color'
-                        ? 'border-[#0067b8] bg-[#e6f2fb]/40'
-                        : 'border-[#edebe9] hover:border-[#a19f9d] bg-white'
+                        ? 'ring-2 ring-espresso bg-linen/50'
+                        : 'ring-1 ring-black/[0.06] hover:ring-outline/40 bg-paper-white'
                     }`}
                   >
                     <div>
-                      <div className="text-xs font-semibold text-[#242424]">Color Print</div>
-                      <div className="text-[11px] text-[#605e5c] mt-0.5">Charts, diagrams & cover pages</div>
-                      <div className="text-xs font-bold text-[#0067b8] mt-1">₹10.00 / page</div>
+                      <div className="text-xs font-semibold text-aubergine-ink">Color Print</div>
+                      <div className="text-[11px] text-warm-ash mt-0.5">Charts, diagrams & cover pages</div>
+                      <div className="text-xs font-bold text-espresso mt-1">₹10.00 / page</div>
                     </div>
-                    {colorMode === 'color' && <Check className="w-4 h-4 text-[#0067b8]" />}
+                    {colorMode === 'color' && <Check className="w-4 h-4 text-espresso" />}
                   </div>
                 </div>
               </div>
@@ -964,17 +961,17 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Print Sides */}
                 <div>
-                  <label className="block text-xs font-semibold text-[#242424] mb-2">
+                  <label className="block text-xs font-semibold text-aubergine-ink mb-2">
                     Print Sides
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setSides('double')}
-                      className={`py-2 px-3 text-xs font-medium rounded border text-center transition-colors ${
+                      className={`py-2 px-3 text-xs font-medium rounded-full border text-center transition-colors ${
                         sides === 'double'
-                          ? 'border-[#0067b8] bg-[#0067b8] text-white'
-                          : 'border-[#8a8886] hover:bg-[#f3f2f1] text-[#242424]'
+                          ? 'border-espresso bg-espresso text-paper-white'
+                          : 'border-outline/40 hover:bg-bone text-aubergine-ink'
                       }`}
                     >
                       Double Sided (Duplex)
@@ -982,10 +979,10 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                     <button
                       type="button"
                       onClick={() => setSides('single')}
-                      className={`py-2 px-3 text-xs font-medium rounded border text-center transition-colors ${
+                      className={`py-2 px-3 text-xs font-medium rounded-full border text-center transition-colors ${
                         sides === 'single'
-                          ? 'border-[#0067b8] bg-[#0067b8] text-white'
-                          : 'border-[#8a8886] hover:bg-[#f3f2f1] text-[#242424]'
+                          ? 'border-espresso bg-espresso text-paper-white'
+                          : 'border-outline/40 hover:bg-bone text-aubergine-ink'
                       }`}
                     >
                       Single Sided
@@ -995,14 +992,14 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
 
                 {/* Copies Stepper */}
                 <div>
-                  <label className="block text-xs font-semibold text-[#242424] mb-2">
+                  <label className="block text-xs font-semibold text-aubergine-ink mb-2">
                     Number of Copies
                   </label>
                   <div className="flex items-center space-x-2">
                     <button
                       type="button"
                       onClick={() => setCopies(Math.max(1, copies - 1))}
-                      className="w-9 h-9 border border-[#8a8886] rounded bg-[#f3f2f1] hover:bg-[#edebe9] text-[#242424] font-bold text-sm flex items-center justify-center"
+                      className="w-9 h-9 border border-outline/40 rounded-full bg-bone hover:bg-surface-container-high text-aubergine-ink font-bold text-sm flex items-center justify-center"
                     >
                       -
                     </button>
@@ -1012,56 +1009,56 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                       max="50"
                       value={copies}
                       onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-16 h-9 border border-[#8a8886] rounded text-center text-sm font-semibold focus:outline-none focus:border-[#0067b8]"
+                      className="w-16 h-9 border border-outline/40 rounded-[12px] text-center text-sm font-semibold focus:ring-2 focus:ring-espresso focus:outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setCopies(copies + 1)}
-                      className="w-9 h-9 border border-[#8a8886] rounded bg-[#f3f2f1] hover:bg-[#edebe9] text-[#242424] font-bold text-sm flex items-center justify-center"
+                      className="w-9 h-9 border border-outline/40 rounded-full bg-bone hover:bg-surface-container-high text-aubergine-ink font-bold text-sm flex items-center justify-center"
                     >
                       +
                     </button>
-                    <span className="text-xs text-[#605e5c] pl-1 font-medium">set(s)</span>
+                    <span className="text-xs text-warm-ash pl-1 font-medium">set(s)</span>
                   </div>
                 </div>
               </div>
 
               {/* Paper Type: Plain vs Photo Paper (+15 rs) */}
               <div>
-                <label className="block text-xs font-semibold text-[#242424] mb-2">
+                <label className="block text-xs font-semibold text-aubergine-ink mb-2">
                   Paper Type
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div
                     onClick={() => setPaperType('plain')}
-                    className={`p-3 rounded-md border-2 cursor-pointer transition-all flex items-start justify-between ${
+                    className={`p-3 rounded-[16px] cursor-pointer transition-all flex items-start justify-between ${
                       paperType === 'plain'
-                        ? 'border-[#0067b8] bg-[#e6f2fb]/40'
-                        : 'border-[#edebe9] hover:border-[#a19f9d] bg-white'
+                        ? 'ring-2 ring-espresso bg-linen/50'
+                        : 'ring-1 ring-black/[0.06] hover:ring-outline/40 bg-paper-white'
                     }`}
                   >
                     <div>
-                      <div className="text-xs font-semibold text-[#242424]">Plain Paper</div>
-                      <div className="text-[11px] text-[#605e5c] mt-0.5">Standard 75 GSM paper</div>
-                      <div className="text-xs font-bold text-[#107c10] mt-1">Included (Standard)</div>
+                      <div className="text-xs font-semibold text-aubergine-ink">Plain Paper</div>
+                      <div className="text-[11px] text-warm-ash mt-0.5">Standard 75 GSM paper</div>
+                      <div className="text-xs font-bold text-status-ready mt-1">Included (Standard)</div>
                     </div>
-                    {paperType === 'plain' && <Check className="w-4 h-4 text-[#0067b8]" />}
+                    {paperType === 'plain' && <Check className="w-4 h-4 text-espresso" />}
                   </div>
 
                   <div
                     onClick={() => setPaperType('photo')}
-                    className={`p-3 rounded-md border-2 cursor-pointer transition-all flex items-start justify-between ${
+                    className={`p-3 rounded-[16px] cursor-pointer transition-all flex items-start justify-between ${
                       paperType === 'photo'
-                        ? 'border-[#0067b8] bg-[#e6f2fb]/40'
-                        : 'border-[#edebe9] hover:border-[#a19f9d] bg-white'
+                        ? 'ring-2 ring-espresso bg-linen/50'
+                        : 'ring-1 ring-black/[0.06] hover:ring-outline/40 bg-paper-white'
                     }`}
                   >
                     <div>
-                      <div className="text-xs font-semibold text-[#242424]">Photo Paper</div>
-                      <div className="text-[11px] text-[#605e5c] mt-0.5">Glossy high-resolution finish</div>
-                      <div className="text-xs font-bold text-[#0067b8] mt-1">+₹15.00 / copy</div>
+                      <div className="text-xs font-semibold text-aubergine-ink">Photo Paper</div>
+                      <div className="text-[11px] text-warm-ash mt-0.5">Glossy high-resolution finish</div>
+                      <div className="text-xs font-bold text-espresso mt-1">+₹15.00 / copy</div>
                     </div>
-                    {paperType === 'photo' && <Check className="w-4 h-4 text-[#0067b8]" />}
+                    {paperType === 'photo' && <Check className="w-4 h-4 text-espresso" />}
                   </div>
                 </div>
               </div>
@@ -1069,13 +1066,13 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               {/* Paper Size & Orientation */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#242424] mb-1.5">
+                  <label className="block text-xs font-semibold text-aubergine-ink mb-1.5">
                     Paper Size
                   </label>
                   <select
                     value={paperSize}
                     onChange={(e) => setPaperSize(e.target.value as any)}
-                    className="w-full py-2 px-3 text-xs border border-[#8a8886] rounded focus:outline-none focus:border-[#0067b8] bg-white"
+                    className="w-full py-2 px-3 text-xs border border-outline/40 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none bg-paper-white"
                   >
                     <option value="A4">A4 (Standard Campus Paper)</option>
                     <option value="A3">A3 (Large Sheet - 2x Rate)</option>
@@ -1083,13 +1080,13 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#242424] mb-1.5">
+                  <label className="block text-xs font-semibold text-aubergine-ink mb-1.5">
                     Orientation
                   </label>
                   <select
                     value={orientation}
                     onChange={(e) => setOrientation(e.target.value as any)}
-                    className="w-full py-2 px-3 text-xs border border-[#8a8886] rounded focus:outline-none focus:border-[#0067b8] bg-white"
+                    className="w-full py-2 px-3 text-xs border border-outline/40 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none bg-paper-white"
                   >
                     <option value="portrait">Portrait</option>
                     <option value="landscape">Landscape</option>
@@ -1098,24 +1095,24 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               </div>
 
               {/* Urgent Priority Checkbox */}
-              <div className="p-3 bg-[#fff4ce]/50 border border-[#f2c80f] rounded-md flex items-center justify-between">
+              <div className="p-3 bg-status-queued/[0.05] border border-status-queued/20 rounded-[12px] flex items-center justify-between">
                 <label className="flex items-start space-x-2.5 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={isUrgent}
                     onChange={(e) => setIsUrgent(e.target.checked)}
-                    className="rounded border-[#8a8886] text-[#0067b8] focus:ring-[#0067b8] mt-0.5"
+                    className="rounded-full border-outline/40 text-espresso focus:ring-espresso mt-0.5"
                   />
                   <div>
-                    <div className="text-xs font-semibold text-[#242424]">Urgent Priority Order (+₹10)</div>
-                    <div className="text-[11px] text-[#605e5c]">Priority counter queue (ready in 10-15 minutes)</div>
+                    <div className="text-xs font-semibold text-aubergine-ink">Urgent Priority Order (+₹10)</div>
+                    <div className="text-[11px] text-warm-ash">Priority counter queue (ready in 10-15 minutes)</div>
                   </div>
                 </label>
               </div>
 
               {/* Note for Operator */}
               <div>
-                <label className="block text-xs font-semibold text-[#242424] mb-1">
+                <label className="block text-xs font-semibold text-aubergine-ink mb-1">
                   Note for Operator (Optional)
                 </label>
                 <textarea
@@ -1123,7 +1120,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                   onChange={(e) => setInstructions(e.target.value)}
                   rows={2}
                   placeholder="e.g. Please staple top left corner, or first page in color"
-                  className="w-full p-2.5 text-xs border border-[#8a8886] rounded focus:outline-none focus:border-[#0067b8]"
+                  className="w-full p-2.5 text-xs border border-outline/40 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none"
                 />
               </div>
             </div>
@@ -1132,81 +1129,81 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
 
         {/* Right Column: Order Estimate & Action (4 cols) */}
         <div className="lg:col-span-4 space-y-4">
-          <div className="bg-white border border-[#e1dfdd] rounded-lg p-5 shadow-sm sticky top-20">
-            <h3 className="text-sm font-semibold text-[#242424] pb-3 border-b border-[#edebe9]">
+          <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-5 shadow-card sticky top-20">
+            <h3 className="text-sm font-semibold text-aubergine-ink pb-3 border-b border-bone">
               Print Order Estimate
             </h3>
 
             {/* Student info */}
-            <div className="py-3 border-b border-[#edebe9] text-xs space-y-1">
-              <div className="text-[#605e5c]">
-                Student: <span className="font-semibold text-[#242424]">{user.name}</span>
+            <div className="py-3 border-b border-bone text-xs space-y-1">
+              <div className="text-warm-ash">
+                Student: <span className="font-semibold text-aubergine-ink">{user.name}</span>
               </div>
-              <div className="text-[#605e5c]">
-                Roll No: <span className="font-semibold text-[#242424]">{user.studentId || '250222'}</span>
+              <div className="text-warm-ash">
+                Roll No: <span className="font-semibold text-aubergine-ink">{user.studentId || '250222'}</span>
               </div>
-              <div className="text-[#605e5c]">
-                Dept: <span className="text-[#242424]">{user.department || 'Campus Student'}</span>
+              <div className="text-warm-ash">
+                Dept: <span className="text-aubergine-ink">{user.department || 'Campus Student'}</span>
               </div>
             </div>
 
             {/* Bill breakdown */}
-            <div className="py-3 border-b border-[#edebe9] space-y-2 text-xs">
+            <div className="py-3 border-b border-bone space-y-2 text-xs">
               {!hasFile ? (
-                <div className="py-4 text-center bg-[#faf9f8] rounded border border-dashed border-[#edebe9] p-3">
-                  <div className="w-8 h-8 rounded-full bg-[#f3f2f1] text-[#8a8886] flex items-center justify-center mx-auto mb-1.5">
-                    <Upload className="w-4 h-4 text-[#0067b8]" />
+                <div className="py-4 text-center bg-linen rounded-[12px] border border-dashed border-bone p-3">
+                  <div className="w-8 h-8 rounded-full bg-bone text-stone flex items-center justify-center mx-auto mb-1.5">
+                    <Upload className="w-4 h-4 text-espresso" />
                   </div>
-                  <div className="text-xs font-semibold text-[#242424]">No Document Uploaded</div>
-                  <div className="text-[11px] text-[#605e5c] mt-0.5">
+                  <div className="text-xs font-semibold text-aubergine-ink">No Document Uploaded</div>
+                  <div className="text-[11px] text-warm-ash mt-0.5">
                     Upload your file to see page count and printing estimate
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="flex justify-between text-[#605e5c]">
+                  <div className="flex justify-between text-warm-ash">
                     <span>
                       Printing ({pageCount} pgs × {copies} × ₹{perPageRate})
                     </span>
-                    <span className="font-medium text-[#242424]">₹{pagesCost}.00</span>
+                    <span className="font-medium text-aubergine-ink">₹{pagesCost}.00</span>
                   </div>
 
                   {photoPaperFee > 0 && (
-                    <div className="flex justify-between text-[#605e5c]">
+                    <div className="flex justify-between text-warm-ash">
                       <span>Photo Paper ({copies} copy)</span>
-                      <span className="font-medium text-[#242424]">₹{photoPaperFee}.00</span>
+                      <span className="font-medium text-aubergine-ink">₹{photoPaperFee}.00</span>
                     </div>
                   )}
 
                   {urgentFee > 0 && (
-                    <div className="flex justify-between text-[#605e5c]">
+                    <div className="flex justify-between text-warm-ash">
                       <span>Urgent Fee</span>
-                      <span className="font-medium text-[#242424]">₹{urgentFee}.00</span>
+                      <span className="font-medium text-aubergine-ink">₹{urgentFee}.00</span>
                     </div>
                   )}
                 </>
               )}
 
-              <div className="pt-2 border-t border-dashed border-[#edebe9] flex justify-between items-baseline">
-                <span className="text-sm font-semibold text-[#242424]">Total Amount</span>
-                <span className={`text-2xl font-bold ${hasFile ? 'text-[#0067b8]' : 'text-[#8a8886]'}`}>
+              <div className="pt-2 border-t border-dashed border-bone flex justify-between items-baseline">
+                <span className="text-sm font-semibold text-aubergine-ink">Total Amount</span>
+                <span className={`text-2xl font-bold ${hasFile ? 'text-espresso' : 'text-stone'}`}>
                   {hasFile ? `₹${totalCost}.00` : '₹0.00'}
                 </span>
               </div>
             </div>
 
             {/* Counter details */}
-            <div className="py-3 border-b border-[#edebe9] space-y-2 text-xs">
-              <div className="flex items-center space-x-2 text-[#605e5c]">
-                <MapPin className="w-4 h-4 text-[#0067b8] shrink-0" />
-                <span>Pickup: <strong>AIT Xerox Shop (Library Ground Floor)</strong></span>
+            <div className="py-3 border-b border-bone space-y-2 text-xs">
+              <div className="flex items-center space-x-2 text-warm-ash">
+                <MapPin className="w-4 h-4 text-espresso shrink-0" />
+                <span>Pickup: <strong className="text-aubergine-ink">AIT Xerox Shop (Library Ground Floor)</strong></span>
               </div>
-              <div className="flex items-center space-x-2 text-[#605e5c]">
-                <Clock className="w-4 h-4 text-[#107c10] shrink-0" />
-                <span>ETA: <strong>{isUrgent ? '10-15 mins' : '20-25 mins'}</strong></span>
+              <div className="flex items-center space-x-2 text-warm-ash">
+                <Clock className="w-4 h-4 text-status-ready shrink-0" />
+                <span>ETA: <strong className="text-aubergine-ink">{isUrgent ? '10-15 mins' : '20-25 mins'}</strong></span>
               </div>
-              <div className="flex items-center space-x-2 text-[#605e5c]">
-                <CreditCard className="w-4 h-4 text-[#797775] shrink-0" />
+              <div className="flex items-center space-x-2 text-warm-ash">
+                <CreditCard className="w-4 h-4 text-stone shrink-0" />
                 <span>Payment via UPI QR or at Counter</span>
               </div>
             </div>
@@ -1217,10 +1214,10 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                 type="button"
                 onClick={handleProceedToPayment}
                 disabled={!hasFile || isMerging || !!mergeError}
-                className={`w-full py-2.5 px-4 rounded font-semibold text-xs transition-colors flex items-center justify-center space-x-2 shadow-sm ${
+                className={`w-full py-2.5 px-4 rounded-full font-semibold text-xs transition-colors flex items-center justify-center space-x-2 shadow-sm ${
                   !hasFile || isMerging || !!mergeError
-                    ? 'bg-[#edebe9] text-[#a19f9d] cursor-not-allowed'
-                    : 'bg-[#0067b8] hover:bg-[#005da6] active:bg-[#004e8c] text-white'
+                    ? 'bg-bone text-stone cursor-not-allowed'
+                    : 'bg-espresso hover:bg-espresso/90 active:bg-espresso/80 text-paper-white'
                 }`}
               >
                 <span>{hasFile ? `Proceed to Payment (₹${totalCost})` : 'Upload Document to Proceed'}</span>
@@ -1228,7 +1225,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               </button>
 
               {!hasFile && (
-                <div className="text-[11px] text-[#d83b01] flex items-center justify-center space-x-1 mt-2">
+                <div className="text-[11px] text-status-queued flex items-center justify-center space-x-1 mt-2">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>Upload your document or images to proceed</span>
                 </div>

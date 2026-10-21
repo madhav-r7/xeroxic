@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+
+<html lang="en" style=""><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"inverse-on-surface":"#f1f1ef","on-secondary-container":"#6d625e","on-background":"#1a1c1b","on-surface":"#1a1c1b","primary-container":"#281231","tertiary-container":"#211827","status-queued":"#d83b01","on-secondary":"#ffffff","on-secondary-fixed":"#221a17","outline":"#7d747d","on-error":"#ffffff","tertiary":"#000000","graphite":"#444444","primary":"#000000","on-surface-variant":"#4b454c","tertiary-fixed":"#edddf2","primary-fixed-dim":"#dcbce4","surface-container-lowest":"#ffffff","tertiary-fixed-dim":"#d0c2d6","linen":"#f7f7f5","primary-fixed":"#f8d8ff","background":"#f9f9f7","on-tertiary-fixed":"#211827","secondary-container":"#efdfda","surface-tint":"#6f5578","stone":"#898683","on-tertiary-container":"#8c7f92","on-primary":"#ffffff","on-primary-container":"#977a9f","error":"#ba1a1a","surface":"#f9f9f7","status-printing":"#0078d4","outline-variant":"#cec3cc","surface-container-highest":"#e2e3e1","surface-dim":"#dadad8","inverse-primary":"#dcbce4","surface-variant":"#e2e3e1","on-secondary-fixed-variant":"#4f4541","on-tertiary":"#ffffff","surface-container":"#eeeeec","secondary-fixed":"#efdfda","bone":"#edece7","on-error-container":"#93000a","on-primary-fixed":"#281231","inverse-surface":"#2f3130","status-ready":"#107c41","espresso":"#160f0c","error-container":"#ffdad6","surface-container-low":"#f4f4f2","on-primary-fixed-variant":"#563e5f","on-tertiary-fixed-variant":"#4d4354","paper-white":"#ffffff","warm-ash":"#766a7c","surface-bright":"#f9f9f7","surface-container-high":"#e8e8e6","secondary":"#675c58","secondary-fixed-dim":"#d2c3be","status-completed":"#605e5c","aubergine-ink":"#1b0624"},borderRadius:{"DEFAULT":"1rem","lg":"2rem","xl":"3rem","full":"9999px"},spacing:{"gutter":"1.5rem","space-xs":"0.25rem","gutter-mobile":"1rem","space-md":"1rem","space-lg":"1.5rem","margin-mobile":"1rem","margin":"2rem","space-sm":"0.5rem","space-xl":"2.5rem"},fontFamily:{"headline-sm":["Inter"],"label-sm":["Inter"],"subhead-lg":["Inter"],"label-md":["Inter"],"headline-xl":["Inter"],"body-md":["Inter"],"subhead-md":["Inter"],"headline-md":["Inter"],"body-lg":["Inter"],"headline-lg":["Inter"],"headline-xl-mobile":["Inter"],"code-md":["JetBrains Mono"]},fontSize:{"headline-sm":["20px",{lineHeight:"26px",letterSpacing:"-0.015em",fontWeight:"500"}],"label-sm":["12px",{lineHeight:"16px",letterSpacing:"0.04em",fontWeight:"500"}],"subhead-lg":["18px",{lineHeight:"26px",fontWeight:"500"}],"label-md":["13px",{lineHeight:"18px",fontWeight:"500"}],"headline-xl":["44px",{lineHeight:"52px",letterSpacing:"-0.03em",fontWeight:"600"}],"body-md":["14px",{lineHeight:"22px",fontWeight:"400"}],"subhead-md":["16px",{lineHeight:"22px",fontWeight:"500"}],"headline-md":["24px",{lineHeight:"32px",letterSpacing:"-0.02em",fontWeight:"500"}],"body-lg":["15px",{lineHeight:"24px",fontWeight:"400"}],"headline-lg":["32px",{lineHeight:"38px",letterSpacing:"-0.025em",fontWeight:"500"}],"headline-xl-mobile":["32px",{lineHeight:"38px",letterSpacing:"-0.025em",fontWeight:"600"}],"code-md":["13px",{lineHeight:"18px",fontWeight:"500"}]}}}};</script></head><body class="bg-transparent font-body-md text-on-surface antialiased relative">
+<!-- Ambient Gradient Glow Backdrop Layer -->
+<div class="fixed inset-0 pointer-events-none -z-10 transition-all duration-300 ease-out" id="ambient-backdrop" style="background: radial-gradient(circle at 50% 15%, rgba(220, 226, 250, 0.5) 0%, rgba(240, 242, 249, 0.3) 50%, rgba(247, 247, 245, 0.95) 100%);"></div>
+<!-- Fixed Full-Viewport Particle Canvas -->
+<canvas class="fixed inset-0 w-screen h-screen pointer-events-none z-0" id="particle-canvas"></canvas>
+<header class="fixed top-0 w-full z-50 bg-paper-white/95 backdrop-blur-md shadow-[0_1px_8px_rgba(22,15,12,0.04)]"><div class="h-16 w-full px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md flex-shrink-0"><img alt="Xeroxic Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XoFXZd9jw2UfPPG__8sboonpYQYPrXEjmYyhR1bbE5CJTiz5XGFdZZWfQ_F7MOONUMz78K2fhuog13nOE8e3iKqu6ishj3SXa6AJNRWR8oIGHgwwqPlf_XRwEFA0TEpymnLPyRXOuetyrDkXdrhXHQzh9l1iD-cfhVyeeEm0adkyCB_D_HEMfz6uKh3e12MA80IhmunMaP0XGV6rQep43JcQXvAa4mqLY3ojkYULqtVF83w8HqZvQJLig"/><span class="font-headline-sm text-headline-sm tracking-tight text-espresso font-semibold">Xeroxic</span><div class="hidden xl:flex items-center gap-space-xs px-space-sm py-0.5 rounded-full bg-surface-container-high"><span class="w-1.5 h-1.5 rounded-full bg-status-ready inline-block"></span><span class="font-label-sm text-label-sm text-on-surface">Counter 1 &amp; 2 Active • ~6m wait</span></div></div><nav class="hidden lg:flex items-center gap-space-xs" data-active-classes="bg-espresso text-paper-white font-subhead-md text-subhead-md px-space-md py-1.5 rounded-full transition-all"><a class="font-subhead-md text-subhead-md text-on-surface-variant hover:text-on-surface px-space-sm py-1.5 rounded-full transition-colors" data-path="home" href="#">Home</a><a aria-current="page" class="bg-espresso text-paper-white font-subhead-md text-subhead-md px-space-md py-1.5 rounded-full transition-all" data-path="upload-print" href="#">Upload &amp; Print</a><a class="font-subhead-md text-subhead-md text-on-surface-variant hover:text-on-surface px-space-sm py-1.5 rounded-full transition-colors" data-path="track-orders" href="#">Track Orders</a><a class="font-subhead-md text-subhead-md text-on-surface-variant hover:text-on-surface px-space-sm py-1.5 rounded-full transition-colors" data-path="rate-card" href="#">Rate Card</a><a class="font-subhead-md text-subhead-md text-on-surface-variant hover:text-on-surface px-space-sm py-1.5 rounded-full transition-colors inline-flex items-center gap-space-xs" data-path="operator-queue" href="#">Operator Queue <span class="font-code-md text-code-md bg-secondary-container text-on-secondary-container px-1.5 py-0.5 rounded-full">3 Active</span></a></nav><div class="flex items-center gap-space-sm flex-shrink-0"><a class="hidden sm:inline-flex items-center justify-center bg-espresso hover:bg-espresso/90 text-paper-white font-label-md text-label-md px-space-lg py-2 rounded-full transition-colors shadow-[0_1px_4px_rgba(22,15,12,0.12)]" data-path="upload-print" href="#">New Print Job</a><div class="flex items-center gap-space-xs bg-bone px-space-sm py-1 rounded-full"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden md:flex flex-col pr-1"><span class="font-label-md text-label-md text-espresso leading-tight font-medium">Aditi S.</span><span class="font-label-sm text-label-sm text-warm-ash leading-tight">CS-3rd Yr</span></div></div><div class="hidden md:flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high px-space-sm py-1.5 rounded-full cursor-pointer transition-colors"><span class="">Student</span><span class="material-symbols-outlined text-[16px]">expand_more</span></div></div></div></header><main class="w-full pt-16 bg-transparent min-h-screen relative z-10"><div class="flex flex-col w-full">
+<div class="w-full px-margin-mobile md:px-margin py-space-lg max-w-[1400px] mx-auto">
+<!-- Breadcrumb & Page Header -->
+<div class="flex flex-col gap-space-xs mb-space-lg">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-warm-ash">
+<a class="hover:text-espresso transition-colors" data-path="home" href="#">Home</a>
+<span class="text-stone">/</span>
+<span class="text-aubergine-ink font-medium">Configure Job</span>
+<span class="text-stone">/</span>
+<span class="font-code-md text-code-md bg-bone text-on-surface-variant px-2 py-0.5 rounded-full">JOB-PREVIEW #8841</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-aubergine-ink tracking-tight font-semibold">
+            Upload &amp; Configure Print Job
+          </h1>
+<p class="font-body-lg text-body-lg text-warm-ash mt-1">
+            Configure your paper, binding, and color preferences with real-time cost estimation.
+          </p>
+</div>
+<div class="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-bone self-start md:self-auto">
+<span class="w-2 h-2 rounded-full bg-status-ready"></span>
+<span class="font-label-sm text-label-sm text-espresso font-medium">Printers 01 &amp; 02 Online (Normal Load)</span>
+</div>
+</div>
+</div>
+<!-- 2-Column Split Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Left Column: Form Controls (65% -> 8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg">
+<!-- 1. File Upload Dropzone (Active Loaded State) -->
+<section class="bg-paper-white rounded-[20px] p-space-lg shadow-sm ring-1 ring-black/[0.06] flex flex-col gap-space-md relative overflow-hidden">
+<div class="flex items-center justify-between pb-space-sm bg-bone/40 -mx-space-lg -mt-space-lg px-space-lg pt-space-md mb-1">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-warm-ash font-medium">Active Document</span>
+<span class="font-code-md text-code-md bg-paper-white text-espresso px-2 py-0.5 rounded-full ring-1 ring-black/5 font-semibold">PDF • 4.2 MB</span>
+</div>
+<div class="flex items-center gap-1 text-status-ready font-label-sm text-label-sm font-medium">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="">Integrity Verified</span>
+</div>
+</div>
+<!-- Document Loaded Card -->
+<div class="bg-bone/50 rounded-[16px] p-space-md flex flex-col sm:flex-row sm:items-center justify-between gap-space-md ring-1 ring-black/[0.04] hover:ring-espresso/20 hover:shadow-xs transition-all duration-200 cursor-pointer group relative overflow-hidden" id="file-drop-card"><div class="absolute bottom-0 left-0 h-1 bg-status-ready transition-all duration-300 w-full opacity-0" id="upload-progress-bar"></div><div class="flex items-center gap-space-md min-w-0"><div class="w-12 h-14 bg-aubergine-ink rounded-lg flex flex-col items-center justify-center text-paper-white flex-shrink-0 shadow-sm relative group-hover:scale-105 transition-transform"><span class="material-symbols-outlined text-[24px]" id="doc-icon">description</span><span class="text-[9px] font-bold tracking-widest font-code-md -mt-1 text-primary-fixed" id="doc-ext-badge">PDF</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-2"><span class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold truncate" id="doc-file-name" title="CS302_Operating_Systems_Lab_Assignment_04.pdf">CS302_Operating_Systems_Lab_Assignment_04.pdf</span><span class="hidden font-label-sm text-[11px] bg-status-ready/15 text-status-ready px-2 py-0.5 rounded-full font-medium" id="upload-status-chip">Synced</span></div><div class="flex items-center gap-2 mt-0.5 text-warm-ash font-label-sm text-label-sm"><span class="" id="doc-upload-time">Uploaded 2 mins ago</span><span class="">•</span><span class="text-espresso font-medium" id="doc-page-count-badge">Auto-detected: 14 Pages</span></div></div></div><div class="flex items-center gap-space-sm flex-shrink-0"><input accept=".pdf,.docx,.ppt,.jpg,.png" class="sr-only" id="file-upload-input" type="file"/><button class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded-full bg-paper-white hover:bg-linen active:scale-95 text-espresso font-label-md text-label-md ring-1 ring-black/10 transition-all shadow-sm focus:ring-2 focus:ring-espresso" id="btn-replace-file" title="Select another file to auto-calculate pages" type="button"><span class="material-symbols-outlined text-[16px] transition-transform duration-300 group-hover:rotate-180">cached</span><span class="" id="replace-btn-label">Replace File</span></button></div></div>
+<!-- Page Stepper and Tag Row -->
+<div class="flex flex-col gap-2.5 pt-1"><div class="flex flex-wrap items-center justify-between gap-space-sm"><div class="flex flex-wrap items-center gap-space-sm"><span class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold">Print Range:</span><div class="inline-flex items-center bg-bone p-1 rounded-full ring-1 ring-black/5 gap-1" id="range-toggle-group"><button class="px-space-md py-1 rounded-full bg-espresso text-paper-white font-label-md text-label-md font-medium transition-colors shadow-xs" id="btn-range-all" type="button">All Pages (1–14)</button><button class="px-space-md py-1 rounded-full bg-transparent hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors" id="btn-range-custom" type="button">Custom Range</button></div><div class="relative flex items-center"><input class="bg-bone/40 focus:bg-paper-white text-espresso font-code-md text-code-md px-3 py-1 rounded-full ring-1 ring-black/10 focus:ring-2 focus:ring-espresso focus:outline-none transition-all w-40 placeholder:text-warm-ash/60" id="input-page-range" placeholder="e.g., 1-5, 8, 11-14" type="text" value="1-14"/><input id="input-pages" type="hidden" value="14"/></div><span class="font-code-md text-label-sm text-aubergine-ink font-semibold bg-bone/70 px-2.5 py-0.5 rounded-full ring-1 ring-black/5" id="selected-pages-badge">Selected: 14 pages</span></div><div class="flex items-center gap-space-xs text-warm-ash font-label-sm text-label-sm"><span class="material-symbols-outlined text-[15px]">info</span><span class="">Formats: .pdf, .docx, .ppt, .jpg (Max 50MB)</span></div></div></div>
+</section>
+<!-- 2. Print Copies & Color Mode -->
+<div class="bg-paper-white rounded-[16px] p-space-md shadow-sm ring-1 ring-black/[0.06] flex flex-col md:flex-row md:items-center justify-between gap-space-md"><div class="flex items-center justify-between md:justify-start gap-space-md flex-shrink-0 md:pr-space-md md:border-r border-black/[0.06]"><div class="flex flex-col"><h2 class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold leading-tight">Print Copies</h2><p class="font-label-sm text-label-sm text-warm-ash">Duplicate sets</p></div><div class="flex items-center gap-1.5 bg-bone/60 rounded-full p-1 ring-1 ring-black/5"><button aria-label="Decrease copies" class="w-7 h-7 rounded-full bg-paper-white hover:bg-linen flex items-center justify-center text-espresso font-semibold shadow-xs active:scale-95 transition-all" id="btn-copy-dec" type="button"><span class="material-symbols-outlined text-[16px]">remove</span></button><div class="flex items-baseline gap-1 px-1.5 min-w-[36px] justify-center"><span class="font-subhead-lg text-subhead-lg text-espresso font-bold" id="copies-count">2</span><span class="font-label-sm text-label-sm text-warm-ash font-medium">Sets</span></div><button aria-label="Increase copies" class="w-7 h-7 rounded-full bg-paper-white hover:bg-linen flex items-center justify-center text-espresso font-semibold shadow-xs active:scale-95 transition-all" id="btn-copy-inc" type="button"><span class="material-symbols-outlined text-[16px]">add</span></button></div></div><div class="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 min-w-0"><div class="flex items-center gap-2 flex-shrink-0"><h2 class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold leading-tight">Color Mode</h2><span class="font-label-sm text-[11px] text-warm-ash bg-bone px-2 py-0.5 rounded-full">Laser</span></div><div class="grid grid-cols-2 gap-2 flex-1" id="color-options"><label class="relative flex items-center justify-between px-3 py-2 rounded-[12px] bg-linen/50 cursor-pointer ring-2 ring-espresso transition-all hover:bg-bone/40" data-color-value="bw"><input checked="" class="sr-only" name="color_mode" type="radio" value="bw"/><div class="flex items-center gap-2 min-w-0"><div class="w-6 h-6 rounded-full bg-espresso text-paper-white flex items-center justify-center flex-shrink-0 shadow-xs"><span class="material-symbols-outlined text-[14px]">contrast</span></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-aubergine-ink font-semibold truncate leading-tight">Black &amp; White</span><span class="font-label-sm text-[11px] text-warm-ash truncate leading-tight">Notes &amp; code</span></div></div><span class="font-code-md text-[13px] font-semibold text-espresso flex-shrink-0 ml-1.5">₹2.00<span class="text-[10px] text-warm-ash font-normal">/p</span></span></label><label class="relative flex items-center justify-between px-3 py-2 rounded-[12px] bg-paper-white cursor-pointer ring-1 ring-black/10 transition-all hover:bg-bone/40" data-color-value="color"><input class="sr-only" name="color_mode" type="radio" value="color"/><div class="flex items-center gap-2 min-w-0"><div class="w-6 h-6 rounded-full bg-bone text-aubergine-ink flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-[14px]">palette</span></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-aubergine-ink font-semibold truncate leading-tight">Full Color</span><span class="font-label-sm text-[11px] text-warm-ash truncate leading-tight">Charts &amp; covers</span></div></div><span class="font-code-md text-[13px] font-semibold text-espresso flex-shrink-0 ml-1.5">₹10.00<span class="text-[10px] text-warm-ash font-normal">/p</span></span></label></div></div></div>
+<!-- 3. Paper Type Selection -->
+<section class="bg-paper-white rounded-[16px] p-space-md shadow-sm ring-1 ring-black/[0.06] flex flex-col gap-2.5"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><h2 class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold leading-tight">Paper Grade &amp; Substrate</h2><span class="hidden sm:inline font-label-sm text-label-sm text-warm-ash">• FSC-certified</span></div><div class="flex items-center gap-1 text-status-ready font-label-sm text-label-sm"><span class="material-symbols-outlined text-[15px]">eco</span><span class="">100% Recycled</span></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5" id="paper-type-options"><label class="relative flex flex-col p-2.5 rounded-[12px] bg-linen/50 cursor-pointer ring-2 ring-espresso transition-all hover:bg-bone/40" data-paper-value="plain"><input checked="" class="sr-only" name="paper_type" type="radio" value="plain"/><div class="flex items-center justify-between mb-1"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-espresso text-[18px]">feed</span><span class="font-label-md text-label-md text-aubergine-ink font-semibold">Plain Paper (75 GSM)</span></div><span class="font-code-md text-[11px] font-bold text-status-ready bg-status-ready/10 px-2 py-0.5 rounded-full">FREE</span></div><p class="font-label-sm text-[12px] text-warm-ash leading-snug">Smooth bright white finish for standard double-sided prints.</p></label><label class="relative flex flex-col p-2.5 rounded-[12px] bg-paper-white cursor-pointer ring-1 ring-black/10 transition-all hover:bg-bone/40" data-paper-value="photo"><input class="sr-only" name="paper_type" type="radio" value="photo"/><div class="flex items-center justify-between mb-1"><div class="flex items-center gap-1.5 min-w-0"><span class="material-symbols-outlined text-graphite text-[18px]">photo_library</span><span class="font-label-md text-label-md text-aubergine-ink font-semibold truncate">Photo Paper (180 GSM)</span></div><div class="flex items-center gap-1.5 flex-shrink-0"><span class="font-label-sm text-[10px] bg-secondary-container text-on-secondary-container px-1.5 py-0.5 rounded font-medium">POPULAR</span><span class="font-code-md text-[12px] font-semibold text-espresso">+₹15/set</span></div></div><p class="font-label-sm text-[12px] text-warm-ash leading-snug">Glossy high-res finish, smear-resistant vivid saturation.</p></label></div></section>
+<!-- 4. Paper Size, Print Sides & Orientation -->
+<section class="bg-paper-white rounded-[20px] p-space-lg shadow-sm ring-1 ring-black/[0.06] flex flex-col gap-space-lg">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<!-- Paper Size -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-warm-ash">Paper Size</span>
+<div class="flex flex-wrap gap-1.5" id="group-paper-size">
+<button class="btn-toggle active px-space-md py-1.5 rounded-full bg-espresso text-paper-white font-label-md text-label-md transition-colors" data-val="A4" type="button">
+                  A4 (Standard)
+                </button>
+<button class="btn-toggle px-space-md py-1.5 rounded-full bg-bone hover:bg-surface-container-high text-espresso font-label-md text-label-md transition-colors" data-val="A3" type="button">
+                  A3 (2×)
+                </button>
+<button class="btn-toggle px-space-md py-1.5 rounded-full bg-bone hover:bg-surface-container-high text-espresso font-label-md text-label-md transition-colors" data-val="Letter" type="button">
+                  Letter
+                </button>
+</div>
+</div>
+<!-- Print Sides -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-warm-ash">Print Sides</span>
+<div class="flex flex-wrap gap-1.5" id="group-sides">
+<button class="btn-toggle active px-space-md py-1.5 rounded-full bg-espresso text-paper-white font-label-md text-label-md transition-colors flex items-center gap-1" data-val="duplex" type="button">
+<span class="material-symbols-outlined text-[15px]">auto_stories</span>
+<span class="">Duplex (Eco)</span>
+</button>
+<button class="btn-toggle px-space-md py-1.5 rounded-full bg-bone hover:bg-surface-container-high text-espresso font-label-md text-label-md transition-colors" data-val="single" type="button">
+                  Single-Sided
+                </button>
+</div>
+</div>
+<!-- Orientation -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-warm-ash">Orientation</span>
+<div class="flex flex-wrap gap-1.5" id="group-orientation">
+<button class="btn-toggle active px-space-md py-1.5 rounded-full bg-espresso text-paper-white font-label-md text-label-md transition-colors flex items-center gap-1" data-val="portrait" type="button">
+<span class="material-symbols-outlined text-[15px]">stay_current_portrait</span>
+<span class="">Portrait</span>
+</button>
+<button class="btn-toggle px-space-md py-1.5 rounded-full bg-bone hover:bg-surface-container-high text-espresso font-label-md text-label-md transition-colors flex items-center gap-1" data-val="landscape" type="button">
+<span class="material-symbols-outlined text-[15px]">stay_current_landscape</span>
+<span class="">Landscape</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. Binding Options (Visual Card Grid) -->
+<section class="bg-paper-white rounded-[20px] p-space-lg shadow-sm ring-1 ring-black/[0.06] flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold">Binding &amp; Finishing</h2>
+<p class="font-label-sm text-label-sm text-warm-ash mt-0.5">Professional assembly directly in our campus workshop</p>
+</div>
+<span class="font-code-md text-code-md text-warm-ash">Manual Handcraft</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-sm pt-2" id="binding-options">
+<!-- Option 1: No Binding -->
+<label class="relative flex flex-col justify-between p-space-md rounded-[16px] bg-paper-white cursor-pointer ring-1 ring-black/10 transition-all hover:bg-bone/40 h-full" data-binding="none" data-cost="0">
+<input class="sr-only" name="binding_option" type="radio" value="none"/>
+<div>
+<div class="w-8 h-8 rounded-full bg-bone text-graphite flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-[18px]">layers_clear</span>
+</div>
+<span class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold block">No Binding</span>
+<span class="font-label-sm text-label-sm text-warm-ash mt-1 block">Loose collated sheets in folder envelope</span>
+</div>
+<span class="font-code-md text-code-md font-semibold text-warm-ash mt-3">₹0.00</span>
+</label>
+<!-- Option 2: Corner Staple (Selected) -->
+<label class="relative flex flex-col justify-between p-space-md rounded-[16px] bg-linen/50 cursor-pointer ring-2 ring-espresso transition-all hover:bg-bone/40 h-full" data-binding="staple" data-cost="0">
+<input checked="" class="sr-only" name="binding_option" type="radio" value="staple"/>
+<div class="absolute top-2.5 right-2.5">
+<span class="w-2 h-2 rounded-full bg-espresso inline-block"></span>
+</div>
+<div>
+<div class="w-8 h-8 rounded-full bg-espresso text-paper-white flex items-center justify-center mb-2 shadow-xs">
+<span class="material-symbols-outlined text-[18px]">push_pin</span>
+</div>
+<span class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold block">Corner Staple</span>
+<span class="font-label-sm text-label-sm text-warm-ash mt-1 block">Heavy-duty top-left staple up to 80 pgs</span>
+</div>
+<span class="font-code-md text-code-md font-bold text-status-ready mt-3">FREE</span>
+</label>
+<!-- Option 3: Spiral Binding -->
+<label class="relative flex flex-col justify-between p-space-md rounded-[16px] bg-paper-white cursor-pointer ring-1 ring-black/10 transition-all hover:bg-bone/40 h-full" data-binding="spiral" data-cost="25">
+<input class="sr-only" name="binding_option" type="radio" value="spiral"/>
+<div>
+<div class="w-8 h-8 rounded-full bg-bone text-graphite flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-[18px]">cyclone</span>
+</div>
+<span class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold block">Spiral Binding</span>
+<span class="font-label-sm text-label-sm text-warm-ash mt-1 block">Clear acetate sheet + rigid back cover</span>
+</div>
+<span class="font-code-md text-code-md font-semibold text-espresso mt-3">+₹25.00</span>
+</label>
+<!-- Option 4: Hardcover Project Book -->
+<label class="relative flex flex-col justify-between p-space-md rounded-[16px] bg-paper-white cursor-pointer ring-1 ring-black/10 transition-all hover:bg-bone/40 h-full" data-binding="hardcover" data-cost="120">
+<input class="sr-only" name="binding_option" type="radio" value="hardcover"/>
+<div>
+<div class="w-8 h-8 rounded-full bg-bone text-graphite flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-[18px]">menu_book</span>
+</div>
+<span class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold block">Hardcover Book</span>
+<span class="font-label-sm text-label-sm text-warm-ash mt-1 block">Golden embossing for final project thesis</span>
+</div>
+<span class="font-code-md text-code-md font-semibold text-espresso mt-3">+₹120.00</span>
+</label>
+</div>
+</section>
+<!-- 6. Priority & Special Instructions -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-md">
+<!-- Urgent Express Checkbox (5 cols) -->
+<section class="md:col-span-5 bg-paper-white rounded-[20px] p-space-lg shadow-sm ring-1 ring-black/[0.06] flex flex-col justify-between gap-space-sm">
+<div>
+<div class="flex items-center gap-1.5 text-status-queued font-subhead-md text-subhead-md font-semibold">
+<span class="material-symbols-outlined text-[20px]">bolt</span>
+<span class="">Express Priority</span>
+</div>
+<p class="font-label-sm text-label-sm text-warm-ash mt-1 leading-relaxed">
+                Bypass standard queue. Guaranteed print &amp; binding ready in under 15 minutes.
+              </p>
+</div>
+<label class="flex items-center gap-space-sm p-space-sm bg-secondary-container/40 hover:bg-secondary-container/60 rounded-full cursor-pointer transition-colors mt-2">
+<input checked="" class="w-5 h-5 accent-espresso rounded cursor-pointer ml-1" id="check-express" type="checkbox"/>
+<span class="font-subhead-md text-subhead-md text-aubergine-ink font-medium select-none text-[14px]">
+                Urgent Queue (+₹10.00)
+              </span>
+</label>
+</section>
+<!-- Special Instructions Box (7 cols) -->
+<section class="md:col-span-7 bg-paper-white rounded-[20px] p-space-lg shadow-sm ring-1 ring-black/[0.06] flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-subhead-md text-subhead-md text-aubergine-ink font-semibold" for="instructions-textarea">
+                Operator Instructions
+              </label>
+<span class="font-label-sm text-label-sm text-warm-ash">Optional notes</span>
+</div>
+<textarea class="w-full bg-bone/40 focus:bg-paper-white text-on-surface font-body-md text-body-md rounded-[12px] p-space-md ring-1 ring-black/10 focus:ring-2 focus:ring-espresso focus:outline-none transition-all placeholder:text-warm-ash/70 resize-none" id="instructions-textarea" placeholder="e.g. Please print front cover on photo sheet and ensure double-side alignment." rows="3">Ensure staple is firmly placed on top-left corner.</textarea>
+</section>
+</div>
+</div>
+<!-- Right Column: Sticky Quotation & Summary (35% -> 4 cols) -->
+<aside class="lg:col-span-4 sticky top-20 flex flex-col gap-space-md">
+<!-- Order Summary Card -->
+<div class="bg-paper-white rounded-[20px] p-space-lg shadow-md ring-1 ring-black/[0.08] flex flex-col gap-space-md">
+<!-- Card Header -->
+<div class="flex items-center justify-between pb-space-sm bg-bone/30 -mx-space-lg -mt-space-lg px-space-lg pt-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-espresso text-[20px]">receipt_long</span>
+<h2 class="font-subhead-lg text-subhead-lg text-aubergine-ink font-semibold">Order Summary</h2>
+</div>
+<span class="font-code-md text-code-md bg-paper-white text-espresso px-2 py-0.5 rounded-full ring-1 ring-black/5 font-semibold">LIVE TICKET</span>
+</div>
+<!-- Document Mini Preview Strip -->
+<div class="flex items-center gap-space-sm p-space-sm rounded-[14px] bg-bone/50 ring-1 ring-black/5">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-espresso flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">article</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-espresso font-semibold truncate">CS302_Operating_Systems_Lab...</span>
+<span class="font-label-sm text-label-sm text-warm-ash"><span class="" id="lbl-summary-pages">14</span> pgs • <span class="" id="lbl-summary-copies">2</span> copies • Duplex</span>
+</div>
+</div>
+<!-- Itemized Lines -->
+<div class="flex flex-col gap-2.5 text-body-md text-body-md">
+<div class="flex items-center justify-between text-on-surface">
+<span class="text-warm-ash font-medium text-[13px]" id="line-print-calc">14 Pages × 2 Copies (B&amp;W @ ₹2.00)</span>
+<span class="font-code-md text-code-md font-semibold text-espresso" id="cost-pages">₹56.00</span>
+</div>
+<div class="flex items-center justify-between text-on-surface">
+<span class="text-warm-ash font-medium text-[13px]">Paper: <span class="" id="line-paper-label">Standard 75 GSM A4</span></span>
+<span class="font-code-md text-code-md font-semibold text-espresso" id="cost-paper">₹0.00</span>
+</div>
+<div class="flex items-center justify-between text-on-surface">
+<span class="text-warm-ash font-medium text-[13px]">Sides: Double-Sided (Duplex)</span>
+<span class="font-code-md text-code-md text-status-ready font-medium">Included</span>
+</div>
+<div class="flex items-center justify-between text-on-surface">
+<span class="text-warm-ash font-medium text-[13px]">Binding: <span class="" id="line-binding-label">Corner Staple</span></span>
+<span class="font-code-md text-code-md font-medium text-status-ready" id="cost-binding">Free</span>
+</div>
+<div class="flex items-center justify-between text-on-surface" id="row-express-cost" style="display: flex;">
+<span class="text-status-queued font-medium text-[13px] flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">bolt</span>
+<span class="">Urgent Express Surcharge</span>
+</span>
+<span class="font-code-md text-code-md font-semibold text-status-queued">₹10.00</span>
+</div>
+</div>
+<!-- Subtle Divider -->
+<div class="h-[1px] bg-bone w-full my-0.5"></div>
+<!-- Total Calculation -->
+<div class="flex items-end justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-warm-ash uppercase tracking-wider font-semibold">Total Payable</span>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-status-ready"></span>
+<span class="font-label-sm text-label-sm text-warm-ash">Tax &amp; Service Included</span>
+</div>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-xl text-headline-xl font-bold text-aubergine-ink tracking-tight" id="total-amount">₹66.00</span>
+</div>
+</div>
+<!-- Target & Turnaround Metadata Card -->
+<div class="p-space-md rounded-[16px] bg-bone/40 ring-1 ring-black/[0.04] flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-espresso">location_on</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-warm-ash font-medium">Pickup Desk</span>
+<span class="font-label-md text-label-md text-espresso font-semibold">Counter 1 • Library Ground Floor</span>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-1 border-t border-black/[0.04]">
+<span class="material-symbols-outlined text-[18px] text-status-ready">timer</span>
+<div class="flex items-center justify-between w-full">
+<span class="font-label-sm text-label-sm text-warm-ash font-medium">Estimated Pickup</span>
+<span class="font-code-md text-code-md text-status-ready font-bold">~12 mins (8:42 AM)</span>
+</div>
+</div>
+</div>
+<!-- Primary CTA Button -->
+<button class="w-full py-3.5 px-space-lg rounded-full bg-espresso hover:bg-espresso/90 text-paper-white font-subhead-md text-subhead-md font-semibold tracking-wide shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2" id="btn-submit-order" type="button">
+<span class="">Submit Order &amp; Generate Token</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+<!-- Payment Notice & Student Badge -->
+<div class="flex flex-col gap-2 pt-1 text-center">
+<div class="inline-flex items-center justify-center gap-1.5 font-label-sm text-label-sm text-warm-ash">
+<span class="material-symbols-outlined text-[15px] text-graphite">qr_code_scanner</span>
+<span class="">Pay at counter or scan UPI QR upon pickup</span>
+</div>
+<div class="flex items-center justify-center gap-1.5 p-1.5 rounded-full bg-bone text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">school</span>
+<span class="">Submitting as: <strong>Aditi Sharma</strong> (CS-2023-042)</span>
+</div>
+</div>
+</div>
+<!-- Studio Guarantee Mini-Card -->
+<div class="p-space-md rounded-[16px] bg-paper-white/80 backdrop-blur-sm ring-1 ring-black/[0.04] flex items-center gap-space-sm text-warm-ash">
+<span class="material-symbols-outlined text-graphite text-[22px]">verified_user</span>
+<p class="font-label-sm text-label-sm leading-snug">
+<strong>Campus Zero-Mistake Guarantee:</strong> Any printer jams or misalignments are reprinted immediately free of charge.
+          </p>
+</div>
+</aside>
+</div>
+</div>
+<!-- Micro-Interaction Logic for Real-Time Calculator -->
+<script>
+    (function () {
+      // State
+      let pageCount = 14;
+      let copyCount = 2;
+      let colorRate = 2.0; // B&W = 2.0, Color = 10.0
+      let paperSurchargePerSet = 0.0; // Plain = 0, Photo = 15.0
+      let bindingCost = 0.0;
+      let isExpress = true;
+      let expressSurcharge = 10.0;
+
+      // DOM Elements
+      const inputPages = document.getElementById('input-pages');
+      const btnPageDec = document.getElementById('btn-page-dec');
+      const btnPageInc = document.getElementById('btn-page-inc');
+
+      const copiesCount = document.getElementById('copies-count');
+      const btnCopyDec = document.getElementById('btn-copy-dec');
+      const btnCopyInc = document.getElementById('btn-copy-inc');
+
+      const colorOptions = document.querySelectorAll('#color-options label');
+      const paperOptions = document.querySelectorAll('#paper-type-options label');
+      const bindingOptions = document.querySelectorAll('#binding-options label');
+      const checkExpress = document.getElementById('check-express');
+
+      // Summary Elements
+      const lblSummaryPages = document.getElementById('lbl-summary-pages');
+      const lblSummaryCopies = document.getElementById('lbl-summary-copies');
+      const linePrintCalc = document.getElementById('line-print-calc');
+      const costPages = document.getElementById('cost-pages');
+      const linePaperLabel = document.getElementById('line-paper-label');
+      const costPaper = document.getElementById('cost-paper');
+      const lineBindingLabel = document.getElementById('line-binding-label');
+      const costBinding = document.getElementById('cost-binding');
+      const rowExpressCost = document.getElementById('row-express-cost');
+      const totalAmount = document.getElementById('total-amount');
+
+      function updateCalculation() {
+        // Base print cost
+        const pagesCostTotal = pageCount * copyCount * colorRate;
+        const paperCostTotal = copyCount * paperSurchargePerSet;
+        const expressCost = isExpress ? expressSurcharge : 0;
+        const grandTotal = pagesCostTotal + paperCostTotal + bindingCost + expressCost;
+
+        // Update labels
+        if (lblSummaryPages) lblSummaryPages.textContent = pageCount;
+        if (lblSummaryCopies) lblSummaryCopies.textContent = copyCount;
+
+        const colorText = colorRate === 2.0 ? 'B&W @ ₹2.00' : 'Color @ ₹10.00';
+        if (linePrintCalc) {
+          linePrintCalc.textContent = pageCount + ' Pages × ' + copyCount + ' Copies (' + colorText + ')';
+        }
+        if (costPages) {
+          costPages.textContent = '₹' + pagesCostTotal.toFixed(2);
+        }
+
+        if (costPaper) {
+          costPaper.textContent = paperCostTotal > 0 ? '+₹' + paperCostTotal.toFixed(2) : '₹0.00';
+        }
+
+        if (rowExpressCost) {
+          rowExpressCost.style.display = isExpress ? 'flex' : 'none';
+        }
+
+        if (costBinding) {
+          if (bindingCost === 0) {
+            costBinding.textContent = 'Free';
+            costBinding.className = 'font-code-md text-code-md font-medium text-status-ready';
+          } else {
+            costBinding.textContent = '+₹' + bindingCost.toFixed(2);
+            costBinding.className = 'font-code-md text-code-md font-semibold text-espresso';
+          }
+        }
+
+        if (totalAmount) {
+          totalAmount.textContent = '₹' + grandTotal.toFixed(2);
+        }
+      }
+
+      // Page Stepper
+      btnPageDec?.addEventListener('click', () => {
+        if (pageCount > 1) {
+          pageCount--;
+          inputPages.value = pageCount;
+          updateCalculation();
+        }
+      });
+      btnPageInc?.addEventListener('click', () => {
+        pageCount++;
+        inputPages.value = pageCount;
+        updateCalculation();
+      });
+      inputPages?.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10);
+        pageCount = isNaN(val) || val < 1 ? 1 : val;
+        inputPages.value = pageCount;
+        updateCalculation();
+      });
+
+      // Copies Stepper
+      btnCopyDec?.addEventListener('click', () => {
+        if (copyCount > 1) {
+          copyCount--;
+          copiesCount.textContent = copyCount;
+          updateCalculation();
+        }
+      });
+      btnCopyInc?.addEventListener('click', () => {
+        copyCount++;
+        copiesCount.textContent = copyCount;
+        updateCalculation();
+      });
+
+      // Color Mode Cards
+      colorOptions.forEach((card) => {
+        card.addEventListener('click', () => {
+          colorOptions.forEach((c) => {
+            c.classList.remove('ring-2', 'ring-espresso', 'bg-linen/50');
+            c.classList.add('ring-1', 'ring-black/10', 'bg-paper-white');
+          });
+          card.classList.add('ring-2', 'ring-espresso', 'bg-linen/50');
+          card.classList.remove('ring-1', 'ring-black/10', 'bg-paper-white');
+
+          const val = card.getAttribute('data-color-value');
+          colorRate = val === 'color' ? 10.0 : 2.0;
+          updateCalculation();
+        });
+      });
+
+      // Paper Type Cards
+      paperOptions.forEach((card) => {
+        card.addEventListener('click', () => {
+          paperOptions.forEach((c) => {
+            c.classList.remove('ring-2', 'ring-espresso', 'bg-linen/50');
+            c.classList.add('ring-1', 'ring-black/10', 'bg-paper-white');
+          });
+          card.classList.add('ring-2', 'ring-espresso', 'bg-linen/50');
+          card.classList.remove('ring-1', 'ring-black/10', 'bg-paper-white');
+
+          const val = card.getAttribute('data-paper-value');
+          if (val === 'photo') {
+            paperSurchargePerSet = 15.0;
+            if (linePaperLabel) linePaperLabel.textContent = 'Photo Glossy 180 GSM';
+          } else {
+            paperSurchargePerSet = 0.0;
+            if (linePaperLabel) linePaperLabel.textContent = 'Standard 75 GSM A4';
+          }
+          updateCalculation();
+        });
+      });
+
+      // Binding Option Cards
+      bindingOptions.forEach((card) => {
+        card.addEventListener('click', () => {
+          bindingOptions.forEach((c) => {
+            c.classList.remove('ring-2', 'ring-espresso', 'bg-linen/50');
+            c.classList.add('ring-1', 'ring-black/10', 'bg-paper-white');
+          });
+          card.classList.add('ring-2', 'ring-espresso', 'bg-linen/50');
+          card.classList.remove('ring-1', 'ring-black/10', 'bg-paper-white');
+
+          const cost = parseFloat(card.getAttribute('data-cost')) || 0;
+          const bindingType = card.getAttribute('data-binding');
+          bindingCost = cost;
+
+          if (lineBindingLabel) {
+            if (bindingType === 'staple') lineBindingLabel.textContent = 'Corner Staple';
+            else if (bindingType === 'spiral') lineBindingLabel.textContent = 'Spiral Binding';
+            else if (bindingType === 'hardcover') lineBindingLabel.textContent = 'Hardcover Book';
+            else lineBindingLabel.textContent = 'No Binding (Collated)';
+          }
+          updateCalculation();
+        });
+      });
+
+      // Pill Group Single-Selects (Paper Size, Sides, Orientation)
+      ['group-paper-size', 'group-sides', 'group-orientation'].forEach((groupId) => {
+        const group = document.getElementById(groupId);
+        if (group) {
+          const buttons = group.querySelectorAll('.btn-toggle');
+          buttons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+              buttons.forEach((b) => {
+                b.classList.remove('bg-espresso', 'text-paper-white', 'active');
+                b.classList.add('bg-bone', 'text-espresso');
+              });
+              btn.classList.add('bg-espresso', 'text-paper-white', 'active');
+              btn.classList.remove('bg-bone', 'text-espresso');
+            });
+          });
+        }
+      });
+
+      // Express Toggle
+      checkExpress?.addEventListener('change', (e) => {
+        isExpress = e.target.checked;
+        updateCalculation();
+      });
+
+      // Submit Button Feedback
+      const submitBtn = document.getElementById('btn-submit-order');
+      submitBtn?.addEventListener('click', () => {
+        submitBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span><span>Submitting to Counter 1...</span>';
+        submitBtn.disabled = true;
+        setTimeout(() => {
+          submitBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span><span>Token #T-409 Generated</span>';
+          submitBtn.classList.remove('bg-espresso');
+          submitBtn.classList.add('bg-status-ready');
+        }, 1200);
+      });
+
+      // Initial calc
+      updateCalculation();
+    })();
+  </script>
+</div></main><footer class="w-full bg-bone/90 backdrop-blur-sm py-space-xl text-on-surface relative z-10"><div class="w-full px-margin flex flex-col md:flex-row items-start md:items-center justify-between gap-space-lg"><div class="flex flex-col gap-1"><div class="flex items-center gap-space-xs text-espresso font-subhead-md text-subhead-md font-semibold"><span class="material-symbols-outlined text-[20px] text-graphite">location_on</span><span class="">Campus Print Studio • Library Ground Floor</span></div><p class="font-body-md text-body-md text-warm-ash">Room LG-04 • Operating Hours: Mon-Sat 8:30 AM – 7:30 PM • Direct Ext: 4108</p></div><div class="flex flex-wrap items-center gap-space-md"><div class="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-linen"><span class="material-symbols-outlined text-[18px] text-status-ready">eco</span><span class="font-label-md text-label-md text-on-surface">100% Recycled Grain • Campus Zero-Waste Initiative</span></div><div class="flex items-center gap-space-sm text-on-surface-variant"><a class="font-label-md text-label-md hover:text-espresso transition-colors" data-path="rate-card" href="#">Pricing</a><span class="text-stone">•</span><a class="font-label-md text-label-md hover:text-espresso transition-colors" href="#">Quick Support (Ext. 4108)</a></div></div></div></footer>
+<!-- Scroll-Reactive Particle Atmosphere Engine -->
+<script>
+  (function () {
+    const canvas = document.getElementById('particle-canvas');
+    const backdrop = document.getElementById('ambient-backdrop');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let dpr = window.devicePixelRatio || 1;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Palette: soft lavender, delicate periwinkle, warm muted peach
+    const colors = [
+      { r: 216, g: 195, b: 235 }, // soft lavender
+      { r: 195, g: 210, b: 242 }, // delicate periwinkle
+      { r: 245, g: 215, b: 205 }, // warm muted peach
+      { r: 228, g: 220, b: 240 }  // airy lilac
+    ];
+
+    const PARTICLE_COUNT = 75;
+    const particles = [];
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+    }
+
+    class Particle {
+      constructor() {
+        this.baseX = Math.random() * width;
+        this.baseY = Math.random() * height;
+        // Radial displacement bias from center
+        this.dirX = (this.baseX - width * 0.5) / (width * 0.5 || 1);
+        this.dirY = (this.baseY - height * 0.5) / (height * 0.5 || 1);
+        this.radius = 1.2 + Math.random() * 2.2;
+        this.opacity = 0.12 + Math.random() * 0.12;
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+        // Subtle natural drift
+        this.vx = (Math.random() - 0.5) * 0.28;
+        this.vy = (Math.random() - 0.5) * 0.28;
+        this.depth = 0.3 + Math.random() * 0.7; // depth factor for parallax
+      }
+
+      update() {
+        if (!prefersReducedMotion) {
+          this.baseX += this.vx;
+          this.baseY += this.vy;
+
+          if (this.baseX < -40) this.baseX = width + 40;
+          if (this.baseX > width + 40) this.baseX = -40;
+          if (this.baseY < -40) this.baseY = height + 40;
+          if (this.baseY > height + 40) this.baseY = -40;
+        }
+      }
+
+      getRenderPosition(progress) {
+        // Zoom factor: 1.25 at top (p=0), down to 1.0 at bottom (p=1)
+        const zoom = 1.25 - (progress * 0.25);
+        // Outward dispersion: particles spread further as zoom settles
+        const spreadMultiplier = 1.0 + progress * 0.22 * this.depth;
+        const centerX = width * 0.5;
+        const centerY = height * 0.45;
+
+        // Scroll parallax translation: shifts upward as page descends
+        const scrollOffset = progress * 140 * this.depth;
+
+        const x = centerX + (this.baseX - centerX) * zoom * spreadMultiplier;
+        const y = centerY + (this.baseY - centerY) * zoom * spreadMultiplier - scrollOffset;
+
+        return { x, y };
+      }
+    }
+
+    // Initialize particles
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push(new Particle());
+    }
+
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+
+    let currentProgress = 0;
+    let targetProgress = 0;
+
+    function updateScrollProgress() {
+      const scrollY = window.scrollY || window.pageYOffset;
+      const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+      targetProgress = Math.min(Math.max(scrollY / maxScroll, 0), 1);
+    }
+
+    window.addEventListener('scroll', updateScrollProgress, { passive: true });
+    updateScrollProgress();
+
+    function updateBackdropGradient(p) {
+      if (!backdrop) return;
+      // Interpolate background according to scroll progress specification
+      if (p < 0.5) {
+        // Top -> Mid
+        const t = p / 0.5;
+        const r1 = Math.round(220 + (216 - 220) * t);
+        const g1 = Math.round(226 + (215 - 226) * t);
+        const b1 = Math.round(250 + (248 - 250) * t);
+        const a1 = (0.50 - 0.05 * t).toFixed(3);
+        const yPos = Math.round(15 + 30 * t);
+        backdrop.style.background = `radial-gradient(circle at 50% ${yPos}%, rgba(${r1}, ${g1}, ${b1}, ${a1}) 0%, rgba(235, 236, 248, 0.3) 50%, rgba(247, 247, 245, 0.95) 100%)`;
+      } else {
+        // Mid -> Bottom
+        const t = (p - 0.5) / 0.5;
+        const r1 = Math.round(216 + (253 - 216) * t);
+        const g1 = Math.round(215 + (230 - 215) * t);
+        const b1 = Math.round(248 + (220 - 248) * t);
+        const a1 = (0.45 - 0.10 * t).toFixed(3);
+        const yPos = Math.round(45 + 30 * t);
+        backdrop.style.background = `radial-gradient(circle at 50% ${yPos}%, rgba(${r1}, ${g1}, ${b1}, ${a1}) 0%, rgba(242, 228, 240, 0.38) 48%, rgba(247, 247, 245, 0.95) 100%)`;
+      }
+    }
+
+    let animationFrameId;
+
+    function render() {
+      // Smooth interpolation for fluid responsive feel
+      currentProgress += (targetProgress - currentProgress) * 0.1;
+      updateBackdropGradient(currentProgress);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const computedPositions = [];
+
+      // Calculate particle positions and render dots
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.update();
+        const pos = p.getRenderPosition(currentProgress);
+        computedPositions.push(pos);
+
+        // Draw particle
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.opacity})`;
+        ctx.fill();
+      }
+
+      // Proximity connection strokes (whisper-thin web, stroke opacity 0.03-0.08)
+      const maxDistance = 105;
+      const maxDistSq = maxDistance * maxDistance;
+
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = computedPositions[i].x - computedPositions[j].x;
+          const dy = computedPositions[i].y - computedPositions[j].y;
+          const distSq = dx * dx + dy * dy;
+
+          if (distSq < maxDistSq) {
+            const dist = Math.sqrt(distSq);
+            const lineAlpha = (1 - dist / maxDistance) * 0.075;
+            ctx.beginPath();
+            ctx.moveTo(computedPositions[i].x, computedPositions[i].y);
+            ctx.lineTo(computedPositions[j].x, computedPositions[j].y);
+            ctx.strokeStyle = `rgba(160, 150, 190, ${lineAlpha})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    }
+
+    render();
+  })();
+</script>
+</body></html>

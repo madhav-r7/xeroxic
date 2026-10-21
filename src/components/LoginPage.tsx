@@ -166,9 +166,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f6fa] flex flex-col justify-center items-center py-10 px-4 font-segoe select-none">
+    <div className="min-h-screen bg-linen flex flex-col justify-center items-center py-10 px-4 select-none">
       {/* Main Card */}
-      <div className="relative w-full max-w-[460px] bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-[#e5e7eb] p-8 sm:p-10 text-left my-auto">
+      <div className="relative w-full max-w-[460px] bg-paper-white rounded-[20px] shadow-elevated ring-1 ring-black/[0.06] p-8 sm:p-10 text-left my-auto">
         {/* Top-left back arrow inside the card */}
         {onCancel && (
           <button
@@ -176,7 +176,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
             onClick={onCancel}
             aria-label="Back to Home"
             title="Back to Home"
-            className="absolute top-5 left-5 p-2 text-[#605e5c] hover:text-[#242424] hover:bg-[#f3f4f6] rounded-full transition-colors"
+            className="absolute top-5 left-5 p-2 text-warm-ash hover:text-aubergine-ink hover:bg-bone rounded-full transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -192,14 +192,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
             />
           </div>
 
-          <h1 className="text-2xl font-semibold text-[#111827] tracking-tight mt-6">
+          <h1 className="text-2xl font-semibold text-aubergine-ink tracking-tight mt-6">
             {isAdminMode
               ? 'Admin Login'
               : authMode === 'signup'
               ? 'Create Student Account'
               : 'Sign in to Xeroxic'}
           </h1>
-          <p className="text-xs text-[#6b7280] mt-1">
+          <p className="text-xs text-warm-ash mt-1">
             {isAdminMode
               ? 'Access Xerox operator print desk & live queue'
               : authMode === 'signup'
@@ -210,7 +210,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
 
         {/* Auth Mode Toggle Tabs (Sign In vs Sign Up) */}
         {!isAdminMode && (
-          <div className="flex border-b border-[#e5e7eb] mt-6">
+          <div className="flex border-b border-bone mt-6">
             <button
               type="button"
               onClick={() => {
@@ -221,8 +221,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
               }}
               className={`flex-1 pb-2.5 text-xs font-semibold text-center transition-colors border-b-2 ${
                 authMode === 'signin'
-                  ? 'border-[#0062e0] text-[#0062e0]'
-                  : 'border-transparent text-[#6b7280] hover:text-[#111827]'
+                  ? 'border-espresso text-espresso'
+                  : 'border-transparent text-warm-ash hover:text-aubergine-ink'
               }`}
             >
               Sign In
@@ -236,8 +236,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
               }}
               className={`flex-1 pb-2.5 text-xs font-semibold text-center transition-colors border-b-2 ${
                 authMode === 'signup'
-                  ? 'border-[#0062e0] text-[#0062e0]'
-                  : 'border-transparent text-[#6b7280] hover:text-[#111827]'
+                  ? 'border-espresso text-espresso'
+                  : 'border-transparent text-warm-ash hover:text-aubergine-ink'
               }`}
             >
               Sign Up (Register First)
@@ -247,14 +247,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
 
         {/* Error / Success Feedback */}
         {errorMessage && (
-          <div className="mt-4 p-3 text-xs bg-[#fed9cc] text-[#d83b01] rounded-md font-medium flex items-start space-x-2">
+          <div className="mt-4 p-3 text-xs bg-status-queued/10 text-status-queued rounded-[12px] font-medium flex items-start space-x-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="mt-4 p-3 text-xs bg-[#dff6dd] text-[#107c10] rounded-md font-medium flex items-start space-x-2">
+          <div className="mt-4 p-3 text-xs bg-status-ready/10 text-status-ready rounded-[12px] font-medium flex items-start space-x-2">
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{successMessage}</span>
           </div>
@@ -265,7 +265,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
           step === 'username' ? (
             <form onSubmit={handleNext} className="mt-5 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1.5">
+                <label className="block text-xs font-medium text-aubergine-ink mb-1.5">
                   {isAdminMode ? 'Admin Username or Email' : 'Roll Number or College Email'}
                 </label>
                 <input
@@ -278,13 +278,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                       ? 'admin'
                       : 'e.g. 2024CS1092 or student@college.edu'
                   }
-                  className="w-full px-3.5 py-2.5 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
+                  className="w-full px-3.5 py-2.5 text-sm border border-outline/30 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none transition-colors"
                 />
               </div>
 
               {/* Toggle Admin / Student login on the right */}
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] text-[#6b7280]">
+                <span className="text-[11px] text-stone">
                   {isAdminMode ? 'Operator Portal' : 'Student Access'}
                 </span>
                 <button
@@ -297,25 +297,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                     setErrorMessage('');
                     setSuccessMessage('');
                   }}
-                  className="text-xs text-[#0062e0] hover:underline font-semibold"
+                  className="text-xs text-espresso hover:underline font-semibold"
                 >
                   {isAdminMode ? '← Back to Student Login' : 'Admin Login →'}
                 </button>
               </div>
 
               {/* Preset credentials note */}
-              <div className="p-2.5 bg-[#f9fafb] border border-[#e5e7eb] rounded-md text-[11px] text-[#6b7280] space-y-1">
+              <div className="p-2.5 bg-linen border border-bone rounded-[12px] text-[11px] text-stone space-y-1">
                 {isAdminMode ? (
                   <div className="flex items-center space-x-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#0062e0] shrink-0" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-espresso shrink-0" />
                     <span>
-                      Fixed Admin: ID: <strong className="text-[#111827]">admin</strong> | Password: <strong className="text-[#111827]">admin@123</strong>
+                      Fixed Admin: ID: <strong className="text-aubergine-ink">admin</strong> | Password: <strong className="text-aubergine-ink">admin@123</strong>
                     </span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
                     <span>
-                      Demo Student: <strong className="text-[#111827]">2024CS1092</strong> (Pass: <strong className="text-[#111827]">student123</strong>)
+                      Demo Student: <strong className="text-aubergine-ink">2024CS1092</strong> (Pass: <strong className="text-aubergine-ink">student123</strong>)
                     </span>
                     <button
                       type="button"
@@ -323,7 +323,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                         setAuthMode('signup');
                         setErrorMessage('');
                       }}
-                      className="text-[#0062e0] hover:underline font-semibold"
+                      className="text-espresso hover:underline font-semibold"
                     >
                       New user? Sign Up
                     </button>
@@ -333,7 +333,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
 
               <button
                 type="submit"
-                className="w-full mt-2 bg-[#0062e0] hover:bg-[#0052be] active:bg-[#004299] text-white py-2.5 px-4 rounded-lg font-medium text-sm transition-colors flex items-center justify-center space-x-2 shadow-sm"
+                className="w-full mt-2 bg-espresso hover:bg-espresso/90 active:bg-espresso/80 text-paper-white py-2.5 px-4 rounded-full font-medium text-sm transition-colors flex items-center justify-center space-x-2 shadow-sm"
               >
                 <span>Next</span>
                 <ArrowRight className="w-4 h-4" />
@@ -343,8 +343,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
             <form onSubmit={handlePasswordSubmit} className="mt-5 space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-[#374151]">
-                    Enter Password for <span className="font-semibold text-[#111827]">{usernameOrEmail}</span>
+                  <label className="text-xs font-medium text-aubergine-ink">
+                    Enter Password for <span className="font-semibold text-aubergine-ink">{usernameOrEmail}</span>
                   </label>
                   <button
                     type="button"
@@ -353,7 +353,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                       setPassword('');
                       setErrorMessage('');
                     }}
-                    className="text-xs text-[#0062e0] hover:underline"
+                    className="text-xs text-espresso hover:underline"
                   >
                     Change ID
                   </button>
@@ -364,19 +364,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full px-3.5 py-2.5 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
+                  className="w-full px-3.5 py-2.5 text-sm border border-outline/30 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none transition-colors"
                 />
               </div>
 
               {isAdminMode && (
-                <div className="text-[11px] text-[#6b7280]">
-                  Admin Password: <code className="font-mono font-semibold bg-gray-100 px-1 py-0.5 rounded">admin@123</code>
+                <div className="text-[11px] text-stone">
+                  Admin Password: <code className="font-mono font-semibold bg-bone px-1 py-0.5 rounded">admin@123</code>
                 </div>
               )}
 
               <button
                 type="submit"
-                className="w-full mt-2 bg-[#0062e0] hover:bg-[#0052be] text-white py-2.5 px-4 rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center justify-center space-x-2"
+                className="w-full mt-2 bg-espresso hover:bg-espresso/90 text-paper-white py-2.5 px-4 rounded-full font-medium text-sm transition-colors shadow-sm flex items-center justify-center space-x-2"
               >
                 <UserCheck className="w-4 h-4" />
                 <span>Sign in as {isAdminMode ? 'Admin Operator' : 'Student'}</span>
@@ -387,7 +387,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
           /* Form: Sign Up Flow */
           <form onSubmit={handleSignUpSubmit} className="mt-5 space-y-3.5">
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">
+              <label className="block text-xs font-medium text-aubergine-ink mb-1">
                 Full Name *
               </label>
               <input
@@ -396,13 +396,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                 value={signupName}
                 onChange={(e) => setSignupName(e.target.value)}
                 placeholder="e.g. Sumit Jangra"
-                className="w-full px-3.5 py-2 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
+                className="w-full px-3.5 py-2 text-sm border border-outline/30 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none transition-colors"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1">
+                <label className="block text-xs font-medium text-aubergine-ink mb-1">
                   Roll Number *
                 </label>
                 <input
@@ -411,11 +411,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                   value={signupRoll}
                   onChange={(e) => setSignupRoll(e.target.value)}
                   placeholder="e.g. 250222"
-                  className="w-full px-3 py-2 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors uppercase"
+                  className="w-full px-3 py-2 text-sm border border-outline/30 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none transition-colors uppercase"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1">
+                <label className="block text-xs font-medium text-aubergine-ink mb-1">
                   Phone
                 </label>
                 <input
@@ -423,13 +423,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                   value={signupPhone}
                   onChange={(e) => setSignupPhone(e.target.value)}
                   placeholder="9876543210"
-                  className="w-full px-3 py-2 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
+                  className="w-full px-3 py-2 text-sm border border-outline/30 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">
+              <label className="block text-xs font-medium text-aubergine-ink mb-1">
                 College Email *
               </label>
               <input
@@ -438,12 +438,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                 value={signupEmail}
                 onChange={(e) => setSignupEmail(e.target.value)}
                 placeholder="student@college.edu"
-                className="w-full px-3.5 py-2 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
+                className="w-full px-3.5 py-2 text-sm border border-outline/30 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">
+              <label className="block text-xs font-medium text-aubergine-ink mb-1">
                 Department
               </label>
               <input
@@ -451,12 +451,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                 value={signupDepartment}
                 onChange={(e) => setSignupDepartment(e.target.value)}
                 placeholder="Computer Science & Engineering"
-                className="w-full px-3.5 py-2 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
+                className="w-full px-3.5 py-2 text-sm border border-outline/30 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">
+              <label className="block text-xs font-medium text-aubergine-ink mb-1">
                 Create Password *
               </label>
               <input
@@ -465,13 +465,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
                 value={signupPassword}
                 onChange={(e) => setSignupPassword(e.target.value)}
                 placeholder="Choose a password (min 4 characters)"
-                className="w-full px-3.5 py-2 text-sm border border-[#d1d5db] rounded-lg focus:outline-none focus:border-[#0062e0] focus:ring-1 focus:ring-[#0062e0] transition-colors"
+                className="w-full px-3.5 py-2 text-sm border border-outline/30 rounded-[12px] focus:ring-2 focus:ring-espresso focus:outline-none transition-colors"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full mt-3 bg-[#0062e0] hover:bg-[#0052be] active:bg-[#004299] text-white py-2.5 px-4 rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center justify-center space-x-2"
+              className="w-full mt-3 bg-espresso hover:bg-espresso/90 active:bg-espresso/80 text-paper-white py-2.5 px-4 rounded-full font-medium text-sm transition-colors shadow-sm flex items-center justify-center space-x-2"
             >
               <span>Create Account & Sign In</span>
               <ArrowRight className="w-4 h-4" />
@@ -480,7 +480,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
         )}
 
         {/* Footer links */}
-        <div className="flex items-center justify-center space-x-6 text-xs text-[#6b7280] mt-8 pt-4 border-t border-[#f3f4f6]">
+        <div className="flex items-center justify-center space-x-6 text-xs text-stone mt-8 pt-4 border-t border-bone">
           <span className="hover:underline cursor-pointer">Help Desk</span>
           <span>•</span>
           <span className="hover:underline cursor-pointer">Counter 1 & 2</span>
@@ -489,8 +489,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
         </div>
       </div>
 
-      <div className="text-xs text-[#605e5c] py-2 flex flex-col items-center space-y-1">
-        <span className="font-semibold text-[#242424]">Xeroxic • ait xerox shop</span>
+      <div className="text-xs text-warm-ash py-2 flex flex-col items-center space-y-1">
+        <span className="font-semibold text-aubergine-ink">Xeroxic • ait xerox shop</span>
         <span>Operating: 8:30 AM – 4:00 PM (Mon–Sat)</span>
       </div>
     </div>

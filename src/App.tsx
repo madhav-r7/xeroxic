@@ -137,7 +137,16 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-[#242424] font-segoe flex flex-col justify-between">
+    <div className="min-h-screen bg-linen text-aubergine-ink flex flex-col justify-between relative selection:bg-espresso selection:text-paper-white">
+      {/* Ambient Gradient Glow Backdrop Layer matching Stitch design */}
+      <div
+        className="fixed inset-0 pointer-events-none -z-10 transition-all duration-300 ease-out"
+        style={{
+          background:
+            'radial-gradient(circle at 50% 15%, rgba(220, 226, 250, 0.45) 0%, rgba(240, 242, 249, 0.25) 50%, rgba(247, 247, 245, 0.95) 100%)',
+        }}
+      />
+
       <div>
         <Navbar
           user={currentUser}
@@ -193,24 +202,34 @@ export function App() {
         </main>
       </div>
 
-      {/* Clean quiet footer */}
-      <footer className="bg-white border-t border-[#e5e5e5] py-6 px-6 text-xs text-[#605e5c]">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold text-[#242424]">Xeroxic</span>
-            <span>•</span>
-            <span className="uppercase">ait xerox shop</span>
+      {/* Editorial Linen & Ink Footer matching Stitch UI */}
+      <footer className="w-full bg-bone/90 backdrop-blur-sm py-8 text-on-surface border-t border-bone relative z-10">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-espresso font-semibold">
+              <span className="text-sm font-semibold tracking-tight">Xeroxic</span>
+              <span className="text-stone">•</span>
+              <span className="text-xs text-warm-ash font-medium uppercase tracking-wider">
+                Campus Print Studio • Library Ground Floor
+              </span>
+            </div>
+            <p className="text-xs text-warm-ash">
+              Room LG-04 • Operating Hours: Mon–Sat 8:30 AM – 7:30 PM • Direct Ext: 4108
+            </p>
           </div>
 
-          <div className="flex items-center space-x-5">
-            <span>Operating Hours: 8:30 AM – 4:00 PM (Mon–Sat)</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-linen text-xs text-on-surface border border-bone">
+              <span className="w-1.5 h-1.5 rounded-full bg-status-ready inline-block"></span>
+              <span>100% Recycled Grain • Zero-Waste Campus Initiative</span>
+            </div>
             {!currentUser && (
-              <span
+              <button
                 onClick={() => setShowSignInModal(true)}
-                className="text-[#0067b8] hover:underline cursor-pointer"
+                className="text-xs font-semibold text-espresso hover:underline px-2"
               >
                 Sign In
-              </span>
+              </button>
             )}
           </div>
         </div>
