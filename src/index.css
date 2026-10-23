@@ -1,14 +1,185 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.font-algerian {
+  font-family: 'Algerian', 'Cinzel Decorative', 'Cinzel', 'Times New Roman', serif;
+}
+
+:root {
+  --color-aubergine-ink: 27 6 36;
+  --color-espresso: 22 15 12;
+  --color-warm-ash: 118 106 124;
+  --color-graphite: 68 68 68;
+  --color-stone: 137 134 131;
+  --color-paper-white: 255 255 255;
+  --color-linen: 247 247 245;
+  --color-bone: 237 236 231;
+  --color-status-queued: 216 59 1;
+  --color-status-printing: 0 120 212;
+  --color-status-ready: 16 124 65;
+  --color-status-completed: 96 94 92;
+  --color-surface: 249 249 247;
+  --color-surface-dim: 218 218 216;
+  --color-surface-container: 238 238 236;
+  --color-surface-container-high: 232 232 230;
+  --color-on-surface: 26 28 27;
+  --color-on-surface-variant: 75 69 76;
+  --color-secondary-container: 239 223 218;
+  --color-on-secondary-container: 109 98 94;
+  --color-outline: 125 116 125;
+  --color-outline-variant: 206 195 204;
+}
+
+html.dark {
+  --color-aubergine-ink: 244 244 246;
+  --color-espresso: 250 250 250;
+  --color-warm-ash: 161 161 170;
+  --color-graphite: 156 163 175;
+  --color-stone: 140 144 153;
+  --color-paper-white: 24 26 31;
+  --color-linen: 12 13 16;
+  --color-bone: 40 43 51;
+  --color-status-queued: 249 115 22;
+  --color-status-printing: 56 189 248;
+  --color-status-ready: 34 197 94;
+  --color-status-completed: 148 163 184;
+  --color-surface: 18 20 24;
+  --color-surface-dim: 14 15 18;
+  --color-surface-container: 28 31 38;
+  --color-surface-container-high: 38 42 50;
+  --color-on-surface: 240 240 244;
+  --color-on-surface-variant: 180 183 192;
+  --color-secondary-container: 42 38 46;
+  --color-on-secondary-container: 235 225 232;
+  --color-outline: 110 115 125;
+  --color-outline-variant: 52 56 66;
+}
 
 @layer base {
   body {
     @apply bg-linen text-aubergine-ink antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+
+  input, select, textarea {
+    @apply bg-paper-white text-aubergine-ink border-bone;
+  }
+}
+
+html.dark [class*="ring-black"] {
+  --tw-ring-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark .shadow-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+html.dark .shadow-elevated {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Explicit dark mode background and surface overrides */
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: #0c0d10 !important;
+  color: #f4f4f6 !important;
+}
+
+html.dark .bg-linen {
+  background-color: #0c0d10 !important;
+}
+
+html.dark .bg-linen\/50 {
+  background-color: rgba(18, 20, 24, 0.5) !important;
+}
+
+html.dark .bg-paper-white {
+  background-color: #16181d !important;
+}
+
+html.dark .bg-paper-white\/75 {
+  background-color: rgba(22, 24, 29, 0.85) !important;
+}
+
+html.dark .bg-paper-white\/85 {
+  background-color: rgba(22, 24, 29, 0.9) !important;
+}
+
+html.dark .bg-paper-white\/95 {
+  background-color: rgba(22, 24, 29, 0.96) !important;
+}
+
+html.dark .bg-bone {
+  background-color: #242730 !important;
+}
+
+html.dark .bg-bone\/60 {
+  background-color: rgba(36, 39, 48, 0.6) !important;
+}
+
+html.dark .bg-bone\/90 {
+  background-color: rgba(36, 39, 48, 0.9) !important;
+}
+
+html.dark .border-bone {
+  border-color: #282b33 !important;
+}
+
+html.dark .border-bone\/60,
+html.dark .border-bone\/80 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark .divide-bone > :not([hidden]) ~ :not([hidden]) {
+  border-color: #282b33 !important;
+}
+
+html.dark .text-aubergine-ink {
+  color: #f4f4f6 !important;
+}
+
+html.dark .text-aubergine-ink\/85 {
+  color: rgba(244, 244, 246, 0.85) !important;
+}
+
+html.dark .text-warm-ash {
+  color: #a1a1aa !important;
+}
+
+html.dark .text-espresso {
+  color: #fafafa !important;
+}
+
+html.dark .bg-espresso {
+  background-color: #f4f4f6 !important;
+  color: #121316 !important;
+}
+
+html.dark .bg-espresso:hover {
+  background-color: #e4e4e7 !important;
+}
+
+/* Ambient gradient backdrop that shifts between light and dark */
+.ambient-glow-layer {
+  background: radial-gradient(circle at 50% 15%, rgba(220, 226, 250, 0.35) 0%, rgba(240, 242, 249, 0.15) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+html.dark .ambient-glow-layer {
+  background: radial-gradient(circle at 50% 15%, rgba(45, 52, 75, 0.4) 0%, rgba(20, 24, 32, 0.25) 50%, transparent 100%) !important;
+  pointer-events: none;
+}
+
+/* Invert the background van animation when in dark mode */
+html.dark .van-journey-layer,
+html.dark [data-van-journey="true"] {
+  filter: invert(1) !important;
+  -webkit-filter: invert(1) !important;
+  opacity: 0.9 !important;
 }
 
 ::-webkit-scrollbar {
@@ -24,4 +195,163 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #7d747d;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: #0c0d10;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #282b33;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3f4450;
+}
+
+/* ---------------------------------------------------- */
+/* Cinematic 2D Monochrome Van Journey Keyframes        */
+/* ---------------------------------------------------- */
+@keyframes vanParallaxScroll {
+  0% {
+    transform: translateX(0px);
+  }
+  100% {
+    transform: translateX(-800px);
+  }
+}
+
+@keyframes vanParallaxScroll1600 {
+  0% {
+    transform: translateX(0px);
+  }
+  100% {
+    transform: translateX(-1600px);
+  }
+}
+
+@keyframes vanWheelSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vanSuspensionBounce {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  15% {
+    transform: translateY(-2px) rotate(-0.3deg);
+  }
+  30% {
+    transform: translateY(1.2px) rotate(0.18deg);
+  }
+  48% {
+    transform: translateY(-0.8px) rotate(-0.15deg);
+  }
+  68% {
+    transform: translateY(1.8px) rotate(0.25deg);
+  }
+  75% {
+    transform: translateY(-1px) rotate(-0.1deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes vanLuggageJiggle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  25% {
+    transform: translateY(-1.5px);
+  }
+  50% {
+    transform: translateY(0.8px);
+  }
+  75% {
+    transform: translateY(-0.5px);
+  }
+}
+
+@keyframes vanExhaustSmoke {
+  0% {
+    transform: translate(0px, 0px) scale(0.6);
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translate(-30px, -8px) scale(1.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #van-container,
+  #van-rear-wheel,
+  #van-front-wheel {
+    animation-play-state: paused !important;
+  }
+  .animated-gradient-title {
+    animation: none !important;
+  }
+}
+
+/* ---------------------------------------------------- */
+/* Flowing Animated Gradient for Hero Title             */
+/* Visible over black & white background, subtle & rich */
+/* ---------------------------------------------------- */
+@keyframes flowingGradientText {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient-title {
+  background: linear-gradient(
+    115deg,
+    #111111 0%,
+    #2b2b2b 16%,
+    #555555 32%,
+    #8e8e93 46%,
+    #d1d1d6 56%,
+    #7a7a7e 70%,
+    #333333 84%,
+    #111111 100%
+  );
+  background-size: 260% 260%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: flowingGradientText 6s ease-in-out infinite;
+  filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 2px rgba(255, 255, 255, 0.9));
+}
+
+html.dark .animated-gradient-title {
+  background: linear-gradient(
+    115deg,
+    #ffffff 0%,
+    #e4e4e7 16%,
+    #a1a1aa 32%,
+    #ffffff 48%,
+    #71717a 65%,
+    #e4e4e7 82%,
+    #ffffff 100%
+  );
+  background-size: 260% 260%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: flowingGradientText 6s ease-in-out infinite;
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 2px rgba(255, 255, 255, 0.25));
 }

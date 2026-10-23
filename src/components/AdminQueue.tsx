@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PrintJob, User } from '../types';
-import { updateJobStatus, deletePrintJob } from '../services/storage';
+import { PrintJob, User, QueueHoldStatus } from '../types';
+import { updateJobStatus, deletePrintJob, getQueueHoldStatus, setQueueHoldStatus } from '../services/storage';
 import { soundManager } from '../utils/audio';
 import {
   Printer,
@@ -20,16 +20,43 @@ import {
   Volume2,
   VolumeX,
   Bell,
-  FileText
+  FileText,
+  QrCode,
+  AlertTriangle,
+  ArrowRightLeft,
+  PauseCircle,
+  PlayCircle,
+  Pause,
+  ShieldAlert,
 } from 'lucide-react';
+import { PrinterStatusManager } from './PrinterStatusManager';
+
+const HOLD_REASON_PRESETS = [
+  '⚡ Campus Power Interruption / Generator Switchover',
+  '🌐 College LAN / Network Connectivity Disruption',
+  '🖨️ Main Counter Hardware Recalibration & Maintenance',
+  '📦 Bulk Paper & High-Yield Toner Replenishment',
+  '⚙️ Spooler Queue & Print Server Maintenance',
+  '🔄 Counter Shift Handover & Machine Servicing',
+];
+
+const HOLD_ETA_PRESETS = [
+  '10-15 minutes',
+  '20-30 minutes',
+  '45 minutes',
+  '1 hour',
+  'Under 2 hours',
+];
 
 interface AdminQueueProps {
   user: User;
   jobs: PrintJob[];
   onRefresh: () => void;
+  onOpenScanner?: () => void;
 }
 
-export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
+export const AdminQueue: React.FC<AdminQueueProps> = ({ user, jobs, onRefresh, onOpenScanner }) => {
+  const [dashboardView, setDashboardView] = useState<'queue' | 'printers'>('queue');
   const [filter, setFilter] = useState<'all' | 'submitted' | 'processing' | 'ready' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState<PrintJob | null>(null);
@@ -37,6 +64,53 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
   const [actionSuccessMsg, setActionSuccessMsg] = useState('');
   const [newOrderAlert, setNewOrderAlert] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(soundManager.isEnabled());
+
+  // Global Queue Hold / Technical Pause State
+  const [queueHold, setQueueHold] = useState<QueueHoldStatus>(() => getQueueHoldStatus());
+  const [showHoldModal, setShowHoldModal] = useState<boolean>(false);
+  const [holdReason, setHoldReason] = useState<string>(HOLD_REASON_PRESETS[0]);
+  const [holdCustomReason, setHoldCustomReason] = useState<string>('');
+  const [holdEta, setHoldEta] = useState<string>('20-30 minutes');
+
+  useEffect(() => {
+    const handleHoldUpdate = (e: any) => {
+      if (e.detail) {
+        setQueueHold(e.detail);
+      } else {
+        setQueueHold(getQueueHoldStatus());
+      }
+    };
+    window.addEventListener('xeroxic_queue_hold_updated', handleHoldUpdate);
+    window.addEventListener('storage', handleHoldUpdate);
+    return () => {
+      window.removeEventListener('xeroxic_queue_hold_updated', handleHoldUpdate);
+      window.removeEventListener('storage', handleHoldUpdate);
+    };
+  }, []);
+
+  const handlePutQueueOnHold = () => {
+    const finalReason = holdCustomReason.trim() ? holdCustomReason.trim() : holdReason;
+    const res = setQueueHoldStatus(true, finalReason, holdEta, user);
+    if (res.success) {
+      setQueueHold(res.status);
+      setShowHoldModal(false);
+      setActionSuccessMsg(res.message);
+      setTimeout(() => setActionSuccessMsg(''), 4500);
+    } else {
+      alert(res.message);
+    }
+  };
+
+  const handleResumeQueue = () => {
+    const res = setQueueHoldStatus(false, undefined, undefined, user);
+    if (res.success) {
+      setQueueHold(res.status);
+      setActionSuccessMsg('Counter printing queue resumed! Broadcast notification sent to students.');
+      setTimeout(() => setActionSuccessMsg(''), 4500);
+    } else {
+      alert(res.message);
+    }
+  };
 
   // Track known submitted job IDs to sound the bell when a new request arrives
   const knownSubmittedIdsRef = useRef<Set<string>>(
@@ -145,7 +219,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
   const totalRevenue = jobs.reduce((acc, j) => acc + j.cost, 0);
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6">
+    <div className="w-full max-w-[1400px] mx-auto py-8 px-4 sm:px-6 lg:px-8 text-[1.03em] text-left space-y-6">
       {/* Operator Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -153,16 +227,44 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
             <h1 className="text-2xl font-semibold text-aubergine-ink tracking-tight">
               Xerox Operator Dashboard
             </h1>
-            <span className="text-xs bg-status-ready/10 text-status-ready font-semibold px-2.5 py-0.5 rounded-full border border-status-ready/20">
-              Shop Open
-            </span>
+            {queueHold.isHeld ? (
+              <span className="text-xs bg-amber-500/15 text-amber-800 dark:text-amber-300 font-bold px-2.5 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1 animate-pulse">
+                <PauseCircle className="w-3 h-3 text-amber-600" />
+                Queue Under Hold
+              </span>
+            ) : (
+              <span className="text-xs bg-status-ready/10 text-status-ready font-semibold px-2.5 py-0.5 rounded-full border border-status-ready/20">
+                Shop Open
+              </span>
+            )}
           </div>
           <p className="text-xs text-warm-ash mt-0.5">
             Incoming student print requests, in-web print portal, preview & counter queue
           </p>
         </div>
 
-        <div className="flex items-center space-x-2.5">
+        <div className="flex items-center flex-wrap gap-2.5">
+          {/* Queue Under Hold / Technical Pause Button */}
+          {queueHold.isHeld ? (
+            <button
+              onClick={handleResumeQueue}
+              className="text-xs bg-red-600 hover:bg-red-700 text-white font-bold px-3.5 py-1.5 rounded-full flex items-center space-x-1.5 transition-colors shadow-sm animate-pulse"
+              title="Technical pause active — Click to resume counter print queue"
+            >
+              <PlayCircle className="w-3.5 h-3.5" />
+              <span>Resume Queue</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowHoldModal(true)}
+              className="text-xs bg-amber-500/15 hover:bg-amber-500/25 text-amber-900 dark:text-amber-200 border border-amber-500/40 font-semibold px-3.5 py-1.5 rounded-full flex items-center space-x-1.5 transition-colors shadow-xs"
+              title="Pause counter print queue due to technical issues"
+            >
+              <PauseCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Put Queue On Hold</span>
+            </button>
+          )}
+
           {/* Sound Notification Alert Toggle */}
           <button
             onClick={toggleSound}
@@ -185,6 +287,17 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
             Test Bell
           </button>
 
+          {onOpenScanner && (
+            <button
+              onClick={onOpenScanner}
+              className="text-xs bg-espresso hover:bg-espresso/90 text-paper-white dark:bg-white dark:text-[#0c0d10] dark:hover:bg-gray-100 font-semibold px-3.5 py-1.5 rounded-full flex items-center space-x-1.5 transition-colors shadow-sm"
+              title="Open staff QR scanner to verify customer collection"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span>Scan to Collect</span>
+            </button>
+          )}
+
           <button
             onClick={onRefresh}
             className="text-xs bg-paper-white hover:bg-bone text-aubergine-ink border border-outline/30 px-3.5 py-1.5 rounded-full font-semibold flex items-center space-x-1.5 transition-colors shadow-sm"
@@ -194,6 +307,46 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
           </button>
         </div>
       </div>
+
+      {/* Active Queue Hold Alert Banner */}
+      {queueHold.isHeld && (
+        <div className="mb-4 p-4 bg-linear-to-r from-amber-500/15 via-amber-500/10 to-amber-500/5 dark:from-amber-950/40 dark:via-amber-950/20 dark:to-transparent border-2 border-amber-500/40 rounded-[20px] text-xs font-medium text-amber-950 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="p-2.5 bg-amber-500 text-white rounded-xl shrink-0 shadow-xs">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm text-amber-950 dark:text-amber-100">
+                  Printing Queue is Currently Under Hold
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 uppercase">
+                  Technical Pause Active
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-amber-900/90 dark:text-amber-300">
+                <strong>Reason:</strong> {queueHold.reason || 'Technical issue at counter'}
+                {queueHold.estimatedResume && (
+                  <span> • <strong>Expected Resume:</strong> {queueHold.estimatedResume}</span>
+                )}
+                {queueHold.heldBy && (
+                  <span> • <strong>Placed By:</strong> {queueHold.heldBy}</span>
+                )}
+              </p>
+              <p className="text-[11px] text-amber-800/80 dark:text-amber-400/80 mt-0.5">
+                Students see a live alert on their screens. All submitted orders are safely kept in queue and will be processed immediately upon resuming.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleResumeQueue}
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-full text-xs shadow-sm transition-colors flex items-center justify-center gap-1.5 shrink-0"
+          >
+            <PlayCircle className="w-4 h-4" />
+            <span>Resume Queue Now</span>
+          </button>
+        </div>
+      )}
 
       {/* Bell / New Incoming Request Alert Banner */}
       {newOrderAlert && (
@@ -250,8 +403,39 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
         </div>
       </div>
 
-      {/* Filter and Search */}
-      <div className="bg-paper-white ring-1 ring-black/[0.06] p-3 rounded-[20px] mb-4 shadow-card flex flex-col md:flex-row items-center justify-between gap-3">
+      {/* View Switcher: Order Queue vs Printer Fleet & Alerts */}
+      <div className="flex items-center gap-2 border-b border-bone/60 dark:border-white/10 pb-3 mb-4">
+        <button
+          onClick={() => setDashboardView('queue')}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
+            dashboardView === 'queue'
+              ? 'bg-espresso text-paper-white dark:bg-white dark:text-[#0c0d10] shadow-xs'
+              : 'text-warm-ash hover:bg-bone dark:hover:bg-white/5'
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5" />
+          <span>Queue Orders ({jobs.length})</span>
+        </button>
+
+        <button
+          onClick={() => setDashboardView('printers')}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
+            dashboardView === 'printers'
+              ? 'bg-espresso text-paper-white dark:bg-white dark:text-[#0c0d10] shadow-xs'
+              : 'text-warm-ash hover:bg-bone dark:hover:bg-white/5'
+          }`}
+        >
+          <Printer className="w-3.5 h-3.5" />
+          <span>Printer Fleet & Alert Dispatcher</span>
+        </button>
+      </div>
+
+      {dashboardView === 'printers' ? (
+        <PrinterStatusManager user={user} onJobUpdated={onRefresh} />
+      ) : (
+        <>
+          {/* Filter and Search */}
+          <div className="bg-paper-white ring-1 ring-black/[0.06] p-3 rounded-[20px] mb-4 shadow-card flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Status Pills */}
         <div className="flex space-x-1 overflow-x-auto w-full md:w-auto">
           <button
@@ -430,7 +614,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                       </div>
                     </td>
 
-                    {/* Status Badge */}
+                    {/* Status Badge & Machine Assignment */}
                     <td className="py-3 px-4">
                       {job.status === 'submitted' && (
                         <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-status-queued/10 text-status-queued border border-status-queued/20">
@@ -455,6 +639,30 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                           <PackageCheck className="w-3 h-3" />
                           <span>Delivered</span>
                         </span>
+                      )}
+
+                      {/* Assigned Printer Badge */}
+                      {job.assignedPrinterId && (
+                        <div className="mt-1">
+                          <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded bg-bone/80 dark:bg-white/10 text-espresso dark:text-gray-300">
+                            Bay: {job.assignedPrinterId}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Delay Notice Indicator */}
+                      {job.delayNotice && (
+                        <div
+                          className="mt-1 flex items-center gap-1 text-[10px] text-amber-700 dark:text-amber-400 font-semibold"
+                          title={typeof job.delayNotice === 'object' ? job.delayNotice.reason : job.delayNotice}
+                        >
+                          <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
+                          <span className="truncate max-w-[130px]">
+                            {typeof job.delayNotice === 'object'
+                              ? job.delayNotice.revisedEta || 'Delayed'
+                              : 'Delayed'}
+                          </span>
+                        </div>
                       )}
                     </td>
 
@@ -533,6 +741,8 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
           </table>
         </div>
       </div>
+        </>
+      )}
 
       {/* IN-WEB DOCUMENT PREVIEW & PRINT PORTAL MODAL */}
       {previewJob && (
@@ -868,6 +1078,136 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({ jobs, onRefresh }) => {
                 className="px-3 py-2 border border-outline/30 hover:bg-bone text-aubergine-ink font-semibold text-xs rounded-full"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PUT QUEUE ON HOLD MODAL */}
+      {showHoldModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-paper-white dark:bg-[#16181d] text-aubergine-ink dark:text-gray-100 rounded-[24px] max-w-lg w-full p-6 shadow-2xl border border-bone dark:border-white/10 space-y-5">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded-2xl border border-amber-500/30">
+                  <PauseCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold tracking-tight">
+                    Put Queue Under Hold
+                  </h3>
+                  <p className="text-xs text-warm-ash dark:text-gray-400 mt-0.5">
+                    Declare technical hold & broadcast instant alerts to students
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowHoldModal(false)}
+                className="p-1.5 rounded-full hover:bg-bone dark:hover:bg-white/10 text-stone transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Reason Presets */}
+            <div>
+              <label className="block text-xs font-semibold mb-2">
+                Select Technical Issue Preset:
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {HOLD_REASON_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => {
+                      setHoldReason(preset);
+                      setHoldCustomReason('');
+                    }}
+                    className={`text-left text-xs p-2.5 rounded-xl border transition-all ${
+                      holdReason === preset && !holdCustomReason
+                        ? 'border-amber-500 bg-amber-500/10 text-amber-900 dark:text-amber-200 font-semibold ring-1 ring-amber-500/30'
+                        : 'border-bone dark:border-white/10 hover:bg-bone dark:hover:bg-white/5 text-warm-ash dark:text-gray-300'
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Reason Input */}
+            <div>
+              <label className="block text-xs font-semibold mb-1.5">
+                Or Enter Custom Technical Reason:
+              </label>
+              <textarea
+                value={holdCustomReason}
+                onChange={(e) => setHoldCustomReason(e.target.value)}
+                placeholder="e.g. Main duplex laser toner drum replacement in progress..."
+                rows={2}
+                className="w-full text-xs p-3 rounded-xl border border-outline/30 dark:border-white/10 bg-paper-white dark:bg-[#20232a] focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              />
+            </div>
+
+            {/* Estimated Resume Time */}
+            <div>
+              <label className="block text-xs font-semibold mb-2">
+                Estimated Resume Time:
+              </label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {HOLD_ETA_PRESETS.map((eta) => (
+                  <button
+                    key={eta}
+                    type="button"
+                    onClick={() => setHoldEta(eta)}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
+                      holdEta === eta
+                        ? 'border-amber-500 bg-amber-500 text-white font-semibold'
+                        : 'border-bone dark:border-white/10 hover:bg-bone dark:hover:bg-white/5 text-stone dark:text-gray-300'
+                    }`}
+                  >
+                    {eta}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={holdEta}
+                onChange={(e) => setHoldEta(e.target.value)}
+                placeholder="e.g. 20-30 minutes"
+                className="w-full text-xs px-3 py-2 rounded-xl border border-outline/30 dark:border-white/10 bg-paper-white dark:bg-[#20232a] focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              />
+            </div>
+
+            {/* Info notice */}
+            <div className="p-3 bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/20 rounded-xl text-[11px] text-amber-900 dark:text-amber-300 space-y-1">
+              <div className="font-semibold flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span>What happens when you confirm:</span>
+              </div>
+              <p>• A persistent alert banner is immediately displayed across student viewports.</p>
+              <p>• In-app alert notification is broadcast to all active customers.</p>
+              <p>• Submitted print jobs remain safely ordered in queue without cancellation.</p>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end space-x-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowHoldModal(false)}
+                className="px-4 py-2 border border-outline/30 hover:bg-bone dark:hover:bg-white/10 font-semibold text-xs rounded-full transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handlePutQueueOnHold}
+                className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-full shadow-sm transition-colors flex items-center space-x-1.5"
+              >
+                <PauseCircle className="w-4 h-4" />
+                <span>Confirm & Put Queue On Hold</span>
               </button>
             </div>
           </div>

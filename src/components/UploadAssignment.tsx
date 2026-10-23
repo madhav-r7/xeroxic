@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { PrintJob, User } from '../types';
-import { addPrintJobAsync, generateOrderId } from '../services/storage';
+import React, { useState, useEffect } from 'react';
+import { PrintJob, User, QueueHoldStatus } from '../types';
+import { addPrintJobAsync, generateOrderId, getStoredPrinters, isPrinterUnavailable, getQueueHoldStatus } from '../services/storage';
 import { mergeFilesToPdf, MAX_PAGE_COUNT, MAX_TOTAL_SIZE_BYTES } from '../utils/pdfMerger';
 import { PDFDocument } from 'pdf-lib';
+import { generateCollectionToken } from '../utils/qrCode';
+import { OrderQrCodeCard } from './OrderQrCodeCard';
 import {
   Upload,
   Check,
@@ -45,6 +47,25 @@ export interface UploadedFileItem {
 export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobCreated }) => {
   // Navigation phase: 'upload' | 'configure' | 'payment'
   const [currentStep, setCurrentStep] = useState<'upload' | 'configure' | 'payment'>('upload');
+
+  // Queue Hold status
+  const [queueHold, setQueueHold] = useState<QueueHoldStatus>(() => getQueueHoldStatus());
+
+  useEffect(() => {
+    const handleQueueHoldUpdate = (e: any) => {
+      if (e.detail) {
+        setQueueHold(e.detail);
+      } else {
+        setQueueHold(getQueueHoldStatus());
+      }
+    };
+    window.addEventListener('xeroxic_queue_hold_updated', handleQueueHoldUpdate);
+    window.addEventListener('storage', handleQueueHoldUpdate);
+    return () => {
+      window.removeEventListener('xeroxic_queue_hold_updated', handleQueueHoldUpdate);
+      window.removeEventListener('storage', handleQueueHoldUpdate);
+    };
+  }, []);
 
   // Multi-file state
   const [fileList, setFileList] = useState<UploadedFileItem[]>([]);
@@ -313,6 +334,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
           }. Queued at AIT Xerox Shop.`,
         },
       ],
+      collectionToken: generateCollectionToken(randomToken),
     };
 
     try {
@@ -332,75 +354,85 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
   // SUCCESS / CONFIRMATION SCREEN
   if (successJob) {
     return (
-      <div className="max-w-3xl mx-auto py-10 px-4">
-        <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-8 shadow-card text-left">
-          <div className="flex items-center space-x-3 pb-5 border-b border-bone">
+      <div className="w-full max-w-[1400px] mx-auto py-10 px-4 sm:px-6 lg:px-8 text-[1.03em] text-left">
+        <div className="bg-paper-white dark:bg-[#16181d] ring-1 ring-black/[0.06] dark:ring-white/10 border border-bone dark:border-white/10 rounded-[24px] p-6 sm:p-10 shadow-card text-left">
+          <div className="flex items-center space-x-3 pb-5 border-b border-bone dark:border-white/10">
             <div className="w-12 h-12 rounded-full bg-status-ready/15 text-status-ready flex items-center justify-center">
               <Check className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-aubergine-ink">Print Request Received!</h2>
-              <p className="text-xs text-warm-ash">
+              <h2 className="text-xl font-semibold text-aubergine-ink dark:text-[#fafafa]">Print Request Received!</h2>
+              <p className="text-xs text-warm-ash dark:text-[#a1a1aa]">
                 Your single merged PDF has been sent to the AIT Xerox operator desk.
               </p>
             </div>
           </div>
 
-          {/* Token ID Highlight */}
-          <div className="my-6 p-5 bg-linen border border-bone rounded-[16px] grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <div className="text-[11px] font-semibold text-warm-ash uppercase">Your Token ID</div>
-              <div className="text-2xl font-bold text-espresso mt-1 tracking-wider font-mono">
-                {successJob.id}
+          {/* Confirmation Content: Left: Details & Specs; Right: Collection QR Pass */}
+          <div className="my-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Token ID Highlight */}
+              <div className="p-5 bg-linen dark:bg-[#20232a] border border-bone dark:border-white/10 rounded-[16px] grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <div className="text-[11px] font-semibold text-warm-ash dark:text-[#a1a1aa] uppercase">Your Token ID</div>
+                  <div className="text-2xl font-bold text-espresso dark:text-[#fafafa] mt-1 tracking-wider font-mono">
+                    {successJob.id}
+                  </div>
+                  <div className="text-[11px] text-stone dark:text-[#a1a1aa] mt-0.5">Show this token or QR pass at pickup</div>
+                </div>
+                <div>
+                  <div className="text-[11px] font-semibold text-warm-ash dark:text-[#a1a1aa] uppercase">Pickup Counter</div>
+                  <div className="text-base font-semibold text-aubergine-ink dark:text-[#fafafa] mt-1">
+                    {successJob.pickupCounter}
+                  </div>
+                  <div className="text-[11px] text-stone dark:text-[#a1a1aa]">Shopping Complex</div>
+                </div>
+                <div>
+                  <div className="text-[11px] font-semibold text-warm-ash dark:text-[#a1a1aa] uppercase">Estimated Time</div>
+                  <div className="text-base font-semibold text-status-ready mt-1">
+                    {successJob.estimatedPickupTime}
+                  </div>
+                  <div className="text-[11px] text-stone dark:text-[#a1a1aa]">
+                    Amount: ₹{successJob.cost} ({successJob.paymentMethod === 'upi' ? 'UPI' : 'Pay at Counter'})
+                  </div>
+                </div>
               </div>
-              <div className="text-[11px] text-stone mt-0.5">Show this token at pickup</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold text-warm-ash uppercase">Pickup Counter</div>
-              <div className="text-base font-semibold text-aubergine-ink mt-1">
-                {successJob.pickupCounter}
-              </div>
-              <div className="text-[11px] text-stone">Library Ground Floor</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-semibold text-warm-ash uppercase">Estimated Time</div>
-              <div className="text-base font-semibold text-status-ready mt-1">
-                {successJob.estimatedPickupTime}
-              </div>
-              <div className="text-[11px] text-stone">
-                Amount: ₹{successJob.cost} ({successJob.paymentMethod === 'upi' ? 'UPI' : 'Pay at Counter'})
-              </div>
-            </div>
-          </div>
 
-          {/* Order Details */}
-          <div className="space-y-3 text-xs text-aubergine-ink pb-6 border-b border-bone">
-            <div className="font-semibold text-sm text-aubergine-ink">Print Specifications</div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="bg-linen p-2.5 border border-bone rounded-[12px]">
-                <span className="text-warm-ash block text-[11px]">Merged PDF:</span>
-                <span className="font-medium truncate block" title={successJob.fileName}>
-                  {successJob.fileName}
-                </span>
+              {/* Order Details */}
+              <div className="space-y-3 text-xs text-aubergine-ink dark:text-[#fafafa] pb-4">
+                <div className="font-semibold text-sm text-aubergine-ink dark:text-[#fafafa]">Print Specifications</div>
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2.5">
+                  <div className="bg-linen dark:bg-[#20232a] p-2.5 border border-bone dark:border-white/10 rounded-[12px]">
+                    <span className="text-warm-ash dark:text-[#a1a1aa] block text-[11px]">Merged PDF:</span>
+                    <span className="font-medium truncate block" title={successJob.fileName}>
+                      {successJob.fileName}
+                    </span>
+                  </div>
+                  <div className="bg-linen dark:bg-[#20232a] p-2.5 border border-bone dark:border-white/10 rounded-[12px]">
+                    <span className="text-warm-ash dark:text-[#a1a1aa] block text-[11px]">Pages & Copies:</span>
+                    <span className="font-medium">
+                      {successJob.pageCount} pgs × {successJob.copies} {successJob.copies > 1 ? 'copies' : 'copy'}
+                    </span>
+                  </div>
+                  <div className="bg-linen dark:bg-[#20232a] p-2.5 border border-bone dark:border-white/10 rounded-[12px]">
+                    <span className="text-warm-ash dark:text-[#a1a1aa] block text-[11px]">Color & Sides:</span>
+                    <span className="font-medium">
+                      {successJob.colorMode === 'color' ? 'Color' : 'B&W'} ({successJob.sides === 'double' ? 'Duplex' : 'Single Sided'})
+                    </span>
+                  </div>
+                  <div className="bg-linen dark:bg-[#20232a] p-2.5 border border-bone dark:border-white/10 rounded-[12px]">
+                    <span className="text-warm-ash dark:text-[#a1a1aa] block text-[11px]">Paper Type:</span>
+                    <span className="font-medium">
+                      {successJob.paperType === 'photo' ? 'Photo Paper' : 'Plain Paper'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="bg-linen p-2.5 border border-bone rounded-[12px]">
-                <span className="text-warm-ash block text-[11px]">Pages & Copies:</span>
-                <span className="font-medium">
-                  {successJob.pageCount} pgs × {successJob.copies} {successJob.copies > 1 ? 'copies' : 'copy'}
-                </span>
-              </div>
-              <div className="bg-linen p-2.5 border border-bone rounded-[12px]">
-                <span className="text-warm-ash block text-[11px]">Color & Sides:</span>
-                <span className="font-medium">
-                  {successJob.colorMode === 'color' ? 'Color' : 'B&W'} ({successJob.sides === 'double' ? 'Duplex' : 'Single Sided'})
-                </span>
-              </div>
-              <div className="bg-linen p-2.5 border border-bone rounded-[12px]">
-                <span className="text-warm-ash block text-[11px]">Paper Type:</span>
-                <span className="font-medium">
-                  {successJob.paperType === 'photo' ? 'Photo Paper' : 'Plain Paper'}
-                </span>
-              </div>
+            </div>
+
+            {/* QR Code Pass Card */}
+            <div className="lg:col-span-1 flex justify-center">
+              <OrderQrCodeCard job={successJob} size="md" className="w-full max-w-sm" />
             </div>
           </div>
 
@@ -411,14 +443,14 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                 setSuccessJob(null);
                 handleClearAll();
               }}
-              className="w-full sm:w-auto px-4 py-2 border border-outline/40 hover:bg-bone text-aubergine-ink text-xs font-semibold rounded-full transition-colors"
+              className="w-full sm:w-auto px-4 py-2 border border-outline/40 hover:bg-bone dark:border-white/20 dark:hover:bg-white/10 text-aubergine-ink dark:text-[#fafafa] text-xs font-semibold rounded-full transition-colors"
             >
               Upload Another Assignment
             </button>
             <button
               type="button"
               onClick={() => onJobCreated(successJob)}
-              className="w-full sm:w-auto px-5 py-2 bg-espresso hover:bg-espresso/90 text-paper-white text-xs font-semibold rounded-full transition-colors flex items-center justify-center space-x-1.5 shadow-sm"
+              className="w-full sm:w-auto px-5 py-2 bg-espresso hover:bg-espresso/90 dark:bg-white dark:text-black dark:hover:bg-white/90 text-paper-white text-xs font-semibold rounded-full transition-colors flex items-center justify-center space-x-1.5 shadow-sm"
             >
               <Clock className="w-4 h-4" />
               <span>Track Live Status</span>
@@ -432,33 +464,33 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
   // STEP 3: PAYMENT PAGE
   if (currentStep === 'payment') {
     return (
-      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 text-left">
+      <div className="w-full max-w-[1400px] mx-auto py-8 px-4 sm:px-6 lg:px-8 text-left text-[1.03em] space-y-6">
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center space-x-2 text-xs text-warm-ash mb-4">
+        <div className="flex items-center space-x-2 text-sm text-warm-ash dark:text-[#a1a1aa] mb-4">
           <button
             onClick={() => setCurrentStep('configure')}
-            className="flex items-center space-x-1 hover:text-espresso"
+            className="flex items-center space-x-1 hover:text-espresso dark:hover:text-[#fafafa] transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-4 h-4" />
             <span>Back to Print Options</span>
           </button>
           <span>/</span>
-          <span className="font-semibold text-aubergine-ink">Checkout & Payment</span>
+          <span className="font-semibold text-aubergine-ink dark:text-[#fafafa]">Checkout & Payment</span>
         </div>
 
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-aubergine-ink tracking-tight">
+          <h1 className="text-3xl font-bold text-aubergine-ink dark:text-[#fafafa] tracking-tight">
             Review Order & Payment
           </h1>
-          <p className="text-xs text-warm-ash mt-0.5">
+          <p className="text-sm text-warm-ash dark:text-[#a1a1aa] mt-1">
             Complete payment or choose pay at counter to send your print request to the operator desk
           </p>
         </div>
 
         <form onSubmit={handleFinalOrderSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left Column: Payment Options (7 cols) */}
-            <div className="lg:col-span-7 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column: Payment Options (7/8 cols) */}
+            <div className="lg:col-span-7 xl:col-span-8 space-y-6">
               <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-5 shadow-card space-y-4">
                 <h2 className="text-sm font-semibold text-aubergine-ink pb-2 border-b border-bone">
                   Select Payment Method
@@ -580,7 +612,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                   {paymentMethod === 'counter' && (
                     <div className="mt-3 pt-3 border-t border-bone text-xs text-warm-ash space-y-1">
                       <p>
-                        Your order will be printed and kept ready at <strong className="text-aubergine-ink">AIT Xerox Shop</strong> (Library Ground Floor).
+                        Your order will be printed and kept ready at <strong className="text-aubergine-ink">AIT Xerox Shop</strong> (Shopping Complex).
                       </p>
                       <p className="text-status-ready font-medium">
                         Pay ₹{totalCost}.00 in cash or via UPI when handing your Token ID.
@@ -591,10 +623,10 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
               </div>
             </div>
 
-            {/* Right Column: Order Summary & Checkout Button (5 cols) */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-5 shadow-card space-y-4">
-                <h3 className="text-sm font-semibold text-aubergine-ink pb-2 border-b border-bone">
+            {/* Right Column: Order Summary & Checkout Button (5/4 cols) */}
+            <div className="lg:col-span-5 xl:col-span-4 space-y-6">
+              <div className="bg-paper-white dark:bg-[#16181d] ring-1 ring-black/[0.06] dark:ring-white/10 border border-bone dark:border-white/10 rounded-[24px] p-6 shadow-card space-y-5 sticky top-20">
+                <h3 className="text-base font-semibold text-aubergine-ink dark:text-[#fafafa] pb-3 border-b border-bone dark:border-white/10">
                   Order Summary
                 </h3>
 
@@ -677,28 +709,43 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
 
   // STEP 1 & STEP 2: UPLOAD & CONFIGURE
   return (
-    <div className="max-w-5xl mx-auto py-6 px-4 sm:px-6 text-left">
+    <div className="w-full max-w-[1400px] mx-auto py-8 px-4 sm:px-6 lg:px-8 text-left text-[1.03em] space-y-8">
       {/* Title section */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-aubergine-ink tracking-tight">
+      <div className="pb-2 border-b border-bone/60 dark:border-white/10">
+        <h1 className="text-3xl font-bold text-aubergine-ink dark:text-[#fafafa] tracking-tight">
           New Print Order
         </h1>
-        <p className="text-xs text-warm-ash mt-0.5">
+        <p className="text-sm text-warm-ash dark:text-[#a1a1aa] mt-1.5 leading-relaxed">
           Upload single or multiple files (PDFs, JPGs, PNGs). They will be automatically merged into one print-ready PDF.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Upload Dropzone, File List & Print Options (8 cols) */}
-        <div className="lg:col-span-8 space-y-6">
+      {/* Queue Hold Notice */}
+      {queueHold.isHeld && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/30 flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
+          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-bold block text-sm">
+              Notice: Xerox Counter Queue is Temporarily On Hold ({queueHold.reason})
+            </span>
+            <p className="mt-0.5">
+              You can proceed to upload and configure your print order normally. Your document will be accepted and safely placed in line; printing will start once counter operations resume{queueHold.estimatedResume ? ` (approx. ${queueHold.estimatedResume})` : ''}.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Upload Dropzone, File List & Print Options (7/8 cols) */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-8">
           {/* STEP 1: MULTI-FILE UPLOADER & MERGER */}
-          <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-5 shadow-card space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-bone">
-              <div className="flex items-center space-x-2">
-                <span className="w-5 h-5 rounded-full bg-espresso text-paper-white text-xs font-semibold flex items-center justify-center">
+          <div className="bg-paper-white dark:bg-[#16181d] ring-1 ring-black/[0.06] dark:ring-white/10 border border-bone dark:border-white/10 rounded-[24px] p-6 sm:p-8 shadow-card space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-bone dark:border-white/10">
+              <div className="flex items-center space-x-2.5">
+                <span className="w-6 h-6 rounded-full bg-espresso text-paper-white dark:bg-white dark:text-[#0c0d10] text-xs font-bold flex items-center justify-center">
                   1
                 </span>
-                <h2 className="text-sm font-semibold text-aubergine-ink">Document & File Upload</h2>
+                <h2 className="text-base font-semibold text-aubergine-ink dark:text-[#fafafa]">Document & File Upload</h2>
               </div>
               {fileList.length === 0 && (
                 <button
@@ -760,11 +807,11 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
             {fileList.length > 0 && (
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-aubergine-ink">
+                  <span className="font-semibold text-aubergine-ink dark:text-[#fafafa]">
                     Queued Files ({fileList.length}) — Merged in this order:
                   </span>
                   <div className="flex items-center space-x-3">
-                    <label className="text-espresso hover:underline font-semibold cursor-pointer flex items-center space-x-1">
+                    <label className="text-espresso dark:text-[#fafafa] hover:underline font-semibold cursor-pointer flex items-center space-x-1">
                       <Plus className="w-3 h-3" />
                       <span>Add More</span>
                       <input
@@ -791,20 +838,20 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                     return (
                       <div
                         key={item.id}
-                        className="p-2.5 bg-linen hover:bg-bone border border-bone rounded-[12px] flex items-center justify-between transition-colors text-xs"
+                        className="p-2.5 bg-linen hover:bg-bone dark:bg-[#20232a] dark:hover:bg-[#282c35] border border-bone dark:border-white/10 rounded-[12px] flex items-center justify-between transition-colors text-xs"
                       >
                         <div className="flex items-center space-x-2.5 overflow-hidden flex-1 mr-2">
-                          <span className="w-5 h-5 rounded-full bg-paper-white text-warm-ash border border-outline-variant font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
+                          <span className="w-5 h-5 rounded-full bg-paper-white dark:bg-[#16181d] text-warm-ash dark:text-[#a1a1aa] border border-outline-variant dark:border-white/10 font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
                             {idx + 1}
                           </span>
-                          <div className="w-7 h-7 rounded-[8px] bg-paper-white border border-bone text-espresso flex items-center justify-center shrink-0">
+                          <div className="w-7 h-7 rounded-[8px] bg-paper-white dark:bg-[#16181d] border border-bone dark:border-white/10 text-espresso dark:text-[#fafafa] flex items-center justify-center shrink-0">
                             {isPdf ? <FileText className="w-4 h-4 text-status-queued" /> : <ImageIcon className="w-4 h-4 text-status-printing" />}
                           </div>
                           <div className="truncate">
-                            <span className="font-semibold text-aubergine-ink block truncate" title={item.name}>
+                            <span className="font-semibold text-aubergine-ink dark:text-[#fafafa] block truncate" title={item.name}>
                               {item.name}
                             </span>
-                            <span className="text-[10px] text-stone">
+                            <span className="text-[10px] text-stone dark:text-[#a1a1aa]">
                               {item.sizeFormatted} • {isPdf ? 'PDF document' : 'Image (aspect ratio kept on page)'}
                             </span>
                           </div>
@@ -816,7 +863,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                             type="button"
                             onClick={() => handleMoveFile(idx, 'up')}
                             disabled={idx === 0 || isMerging}
-                            className="p-1 rounded-full hover:bg-paper-white text-warm-ash disabled:opacity-30 disabled:hover:bg-transparent"
+                            className="p-1 rounded-full hover:bg-paper-white dark:hover:bg-white/10 text-warm-ash dark:text-[#a1a1aa] disabled:opacity-30 disabled:hover:bg-transparent"
                             title="Move Up"
                           >
                             <ArrowUp className="w-3.5 h-3.5" />
@@ -825,7 +872,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                             type="button"
                             onClick={() => handleMoveFile(idx, 'down')}
                             disabled={idx === fileList.length - 1 || isMerging}
-                            className="p-1 rounded-full hover:bg-paper-white text-warm-ash disabled:opacity-30 disabled:hover:bg-transparent"
+                            className="p-1 rounded-full hover:bg-paper-white dark:hover:bg-white/10 text-warm-ash dark:text-[#a1a1aa] disabled:opacity-30 disabled:hover:bg-transparent"
                             title="Move Down"
                           >
                             <ArrowDown className="w-3.5 h-3.5" />
@@ -834,7 +881,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                             type="button"
                             onClick={() => handleRemoveFile(item.id)}
                             disabled={isMerging}
-                            className="p-1 rounded-full hover:bg-status-queued/10 text-stone hover:text-status-queued ml-1 transition-colors"
+                            className="p-1 rounded-full hover:bg-status-queued/10 text-stone dark:text-[#a1a1aa] hover:text-status-queued ml-1 transition-colors"
                             title="Remove File"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -885,12 +932,12 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
 
           {/* STEP 2: PRINT SPECIFICATIONS (SHOWN AFTER FILES ADDED) */}
           {fileList.length > 0 && (
-            <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-5 shadow-card space-y-5">
-              <div className="flex items-center space-x-2 pb-2 border-b border-bone">
-                <span className="w-5 h-5 rounded-full bg-espresso text-paper-white text-xs font-semibold flex items-center justify-center">
+            <div className="bg-paper-white dark:bg-[#16181d] ring-1 ring-black/[0.06] dark:ring-white/10 border border-bone dark:border-white/10 rounded-[24px] p-6 sm:p-8 shadow-card space-y-6">
+              <div className="flex items-center space-x-2.5 pb-3 border-b border-bone dark:border-white/10">
+                <span className="w-6 h-6 rounded-full bg-espresso text-paper-white dark:bg-white dark:text-[#0c0d10] text-xs font-bold flex items-center justify-center">
                   2
                 </span>
-                <h2 className="text-sm font-semibold text-aubergine-ink">Print Specifications</h2>
+                <h2 className="text-base font-semibold text-aubergine-ink dark:text-[#fafafa]">Print Specifications</h2>
               </div>
 
               {/* Number of Pages to Print (Actual page count from merged PDF) */}
@@ -955,6 +1002,51 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
                     {colorMode === 'color' && <Check className="w-4 h-4 text-espresso" />}
                   </div>
                 </div>
+
+                {/* Live Machine Fleet Availability for Selected Color Mode */}
+                {(() => {
+                  const printers = getStoredPrinters();
+                  const targetType = colorMode === 'color' ? 'color' : 'bw';
+                  const capablePrinters = printers.filter((p) => p.supportedTypes.includes(targetType));
+                  const operationalPrinters = capablePrinters.filter(
+                    (p) => p.status === 'online' || p.status === 'busy'
+                  );
+                  const disruptedPrinters = capablePrinters.filter((p) => isPrinterUnavailable(p.status));
+
+                  if (operationalPrinters.length > 0) {
+                    return (
+                      <div className="mt-2.5 p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 text-[11px] text-emerald-900 dark:text-emerald-300 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span>
+                            <strong>{operationalPrinters[0].name}</strong> is Ready ({colorMode === 'color' ? 'Precision Color Laser' : 'High-Speed B&W Laser'})
+                          </span>
+                        </div>
+                        {disruptedPrinters.length > 0 && (
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                            (Alternative bay operational)
+                          </span>
+                        )}
+                      </div>
+                    );
+                  } else if (disruptedPrinters.length > 0) {
+                    const firstDisrupted = disruptedPrinters[0];
+                    return (
+                      <div className="mt-2.5 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-semibold">Notice on {firstDisrupted.name}: </span>
+                          <span>
+                            Currently {firstDisrupted.status.replace('_', ' ')}
+                            {firstDisrupted.estimatedRecovery ? ` (ETA: ${firstDisrupted.estimatedRecovery})` : ''}.
+                            Orders will queue and process as soon as staff completes servicing.
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               {/* Sides and Copies Grid */}
@@ -1127,10 +1219,10 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
           )}
         </div>
 
-        {/* Right Column: Order Estimate & Action (4 cols) */}
-        <div className="lg:col-span-4 space-y-4">
-          <div className="bg-paper-white ring-1 ring-black/[0.06] rounded-[20px] p-5 shadow-card sticky top-20">
-            <h3 className="text-sm font-semibold text-aubergine-ink pb-3 border-b border-bone">
+        {/* Right Column: Order Estimate & Action (5/4 cols) */}
+        <div className="lg:col-span-5 xl:col-span-4 space-y-6">
+          <div className="bg-paper-white dark:bg-[#16181d] ring-1 ring-black/[0.06] dark:ring-white/10 border border-bone dark:border-white/10 rounded-[24px] p-6 sm:p-8 shadow-card sticky top-20 space-y-5">
+            <h3 className="text-base font-semibold text-aubergine-ink dark:text-[#fafafa] pb-3 border-b border-bone dark:border-white/10">
               Print Order Estimate
             </h3>
 
@@ -1196,7 +1288,7 @@ export const UploadAssignment: React.FC<UploadAssignmentProps> = ({ user, onJobC
             <div className="py-3 border-b border-bone space-y-2 text-xs">
               <div className="flex items-center space-x-2 text-warm-ash">
                 <MapPin className="w-4 h-4 text-espresso shrink-0" />
-                <span>Pickup: <strong className="text-aubergine-ink">AIT Xerox Shop (Library Ground Floor)</strong></span>
+                <span>Pickup: <strong className="text-aubergine-ink">AIT Xerox Shop (Shopping Complex)</strong></span>
               </div>
               <div className="flex items-center space-x-2 text-warm-ash">
                 <Clock className="w-4 h-4 text-status-ready shrink-0" />

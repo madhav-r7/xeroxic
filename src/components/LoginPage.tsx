@@ -10,6 +10,8 @@ import {
   getRegisteredAccounts
 } from '../services/storage';
 import { ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
+import { VanJourneyBackground } from './VanJourneyBackground';
+import { ThemeToggle } from './ThemeToggle';
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
@@ -166,9 +168,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
   };
 
   return (
-    <div className="min-h-screen bg-linen flex flex-col justify-center items-center py-10 px-4 select-none">
+    <div className="min-h-screen bg-linen dark:bg-[#0c0d10] text-aubergine-ink dark:text-[#f4f4f6] flex flex-col justify-center items-center py-10 px-4 select-none relative overflow-hidden transition-colors duration-300">
+      {/* Ambient Gradient Glow Backdrop Layer */}
+      <div className="ambient-glow-layer fixed inset-0 pointer-events-none -z-10 transition-all duration-500 ease-out" />
+
+      {/* Background 2D Monochrome Van Driving Animation */}
+      <VanJourneyBackground hideControls />
+
+      {/* Top Right Corner Dark Mode Option */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle showLabel />
+      </div>
+
       {/* Main Card */}
-      <div className="relative w-full max-w-[460px] bg-paper-white rounded-[20px] shadow-elevated ring-1 ring-black/[0.06] p-8 sm:p-10 text-left my-auto">
+      <div className="relative z-10 w-full max-w-[460px] bg-paper-white dark:bg-[#16181d] rounded-[20px] shadow-elevated ring-1 ring-black/[0.06] dark:ring-white/10 border border-bone dark:border-white/10 p-8 sm:p-10 text-left my-auto transition-colors duration-300">
         {/* Top-left back arrow inside the card */}
         {onCancel && (
           <button
@@ -188,7 +201,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
             <img
               src="/xeroxic-logo-cropped.png"
               alt="Xeroxic Logo"
-              className="h-10 w-auto object-contain"
+              className="h-10 w-auto object-contain dark:mix-blend-screen dark:invert dark:brightness-200 transition-all"
             />
           </div>
 
@@ -304,7 +317,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
               </div>
 
               {/* Preset credentials note */}
-              <div className="p-2.5 bg-linen border border-bone rounded-[12px] text-[11px] text-stone space-y-1">
+              <div className="p-2.5 bg-linen dark:bg-[#20232a] border border-bone dark:border-white/10 rounded-[12px] text-[11px] text-stone dark:text-[#a1a1aa] space-y-1">
                 {isAdminMode ? (
                   <div className="flex items-center space-x-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-espresso shrink-0" />
@@ -483,13 +496,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel }) => {
         <div className="flex items-center justify-center space-x-6 text-xs text-stone mt-8 pt-4 border-t border-bone">
           <span className="hover:underline cursor-pointer">Help Desk</span>
           <span>•</span>
-          <span className="hover:underline cursor-pointer">Counter 1 & 2</span>
+          <span className="hover:underline cursor-pointer">Xerox Counter</span>
           <span>•</span>
-          <span className="hover:underline cursor-pointer">Central Library</span>
+          <span className="hover:underline cursor-pointer">Shopping Complex</span>
         </div>
       </div>
 
-      <div className="text-xs text-warm-ash py-2 flex flex-col items-center space-y-1">
+      <div className="relative z-10 text-xs text-warm-ash py-2 flex flex-col items-center space-y-1">
         <span className="font-semibold text-aubergine-ink">Xeroxic • ait xerox shop</span>
         <span>Operating: 8:30 AM – 4:00 PM (Mon–Sat)</span>
       </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PrintJob, User } from '../types';
+import { PrintJob, User, QueueHoldStatus } from '../types';
 import { soundManager } from '../utils/audio';
+import { getQueueHoldStatus } from '../services/storage';
 import {
   Clock,
   Printer,
@@ -16,8 +17,12 @@ import {
   Check,
   Bell,
   ExternalLink,
-  Download
+  Download,
+  QrCode,
+  X,
+  AlertTriangle,
 } from 'lucide-react';
+import { OrderQrCodeCard } from './OrderQrCodeCard';
 
 interface TrackPrintingProps {
   user: User;
@@ -34,9 +39,27 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
 }) => {
   const [filter, setFilter] = useState<'all' | 'active' | 'ready' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [queueHold, setQueueHold] = useState<QueueHoldStatus>(() => getQueueHoldStatus());
+
+  useEffect(() => {
+    const handleQueueHoldUpdate = (e: any) => {
+      if (e.detail) {
+        setQueueHold(e.detail);
+      } else {
+        setQueueHold(getQueueHoldStatus());
+      }
+    };
+    window.addEventListener('xeroxic_queue_hold_updated', handleQueueHoldUpdate);
+    window.addEventListener('storage', handleQueueHoldUpdate);
+    return () => {
+      window.removeEventListener('xeroxic_queue_hold_updated', handleQueueHoldUpdate);
+      window.removeEventListener('storage', handleQueueHoldUpdate);
+    };
+  }, []);
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [readyAlertMsg, setReadyAlertMsg] = useState<string | null>(null);
+  const [qrModalJob, setQrModalJob] = useState<PrintJob | null>(null);
 
   // Student should see their own jobs
   const studentJobs = jobs.filter(
@@ -133,14 +156,14 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6">
+    <div className="w-full max-w-[1400px] mx-auto py-8 px-4 sm:px-6 lg:px-8 text-[1.03em] text-left space-y-6 transition-colors duration-300">
       {/* Title & Live Status bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-2 border-b border-bone/60 dark:border-white/10">
         <div>
-          <h1 className="text-2xl font-semibold text-aubergine-ink tracking-tight">
+          <h1 className="text-3xl font-bold text-aubergine-ink dark:text-[#fafafa] tracking-tight">
             Track Print Status
           </h1>
-          <p className="text-xs text-warm-ash mt-0.5">
+          <p className="text-sm text-warm-ash dark:text-[#a1a1aa] mt-1">
             Real-time status updates from the Central Xerox machine queue
           </p>
         </div>
@@ -203,6 +226,32 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Queue Hold Notice */}
+      {queueHold.isHeld && (
+        <div className="mb-4 p-4 rounded-2xl bg-amber-500/10 dark:bg-amber-950/40 border-2 border-amber-500/30 flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200 shadow-xs">
+          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm">
+                Xerox Counter Printing Queue Is Currently On Hold
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 uppercase">
+                Technical Hold Active
+              </span>
+            </div>
+            <p className="mt-1">
+              <strong>Reason:</strong> {queueHold.reason || 'Technical issue at counter'}
+              {queueHold.estimatedResume && (
+                <span> • <strong>Expected to resume in:</strong> {queueHold.estimatedResume}</span>
+              )}
+            </p>
+            <p className="text-[11px] text-amber-800/80 dark:text-amber-400/80 mt-0.5">
+              Your active orders remain safely in position and will resume printing automatically once technical maintenance is complete.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="bg-paper-white ring-1 ring-black/[0.06] p-3 rounded-[20px] mb-4 shadow-card flex flex-col md:flex-row items-center justify-between gap-3">
@@ -313,6 +362,14 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
                         </div>
                         <div className="text-xs text-warm-ash mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span className="font-mono font-semibold text-espresso">{job.id}</span>
+                          {job.assignedPrinterId && (
+                            <>
+                              <span>•</span>
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-bone dark:bg-white/10 text-espresso dark:text-gray-200">
+                                Machine: {job.assignedPrinterId}
+                              </span>
+                            </>
+                          )}
                           <span>•</span>
                           <span>{job.pageCount} pages × {job.copies} set(s)</span>
                           <span>•</span>
@@ -333,6 +390,35 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
                       </div>
                     </div>
                   </div>
+
+                  {/* Customer Delay Alert Banner */}
+                  {job.delayNotice && (
+                    <div className="mt-4 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 flex items-start gap-3">
+                      <div className="p-1.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5">
+                        <AlertTriangle className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0 text-xs">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="font-bold text-amber-950 dark:text-amber-200">
+                            Printer Availability Notice
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200">
+                            {typeof job.delayNotice === 'object' && job.delayNotice.revisedEta
+                              ? job.delayNotice.revisedEta
+                              : 'Technician Attending'}
+                          </span>
+                        </div>
+                        <p className="text-amber-900/90 dark:text-amber-300 mt-1 leading-relaxed">
+                          {typeof job.delayNotice === 'object' ? job.delayNotice.reason : job.delayNotice}
+                        </p>
+                        <div className="text-[11px] text-amber-800/80 dark:text-amber-400/80 mt-1 flex items-center gap-2">
+                          <span>Original ETA: {typeof job.delayNotice === 'object' ? (job.delayNotice.originalEta || job.estimatedPickupTime) : job.estimatedPickupTime}</span>
+                          <span>•</span>
+                          <span>Shop staff is monitoring counter turnaround</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* 4-Step Progress Tracker */}
                   <div className="mt-6 pt-4 border-t border-bone">
@@ -452,8 +538,17 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
 
                   <div className="flex items-center space-x-2">
                     <button
+                      onClick={() => setQrModalJob(job)}
+                      className="text-xs bg-espresso hover:bg-espresso/90 text-paper-white dark:bg-white dark:text-[#0c0d10] font-semibold px-2.5 py-1 rounded-full flex items-center space-x-1 shadow-sm transition-opacity"
+                      title="Show collection QR pass on phone"
+                    >
+                      <QrCode className="w-3.5 h-3.5" />
+                      <span>Collection QR</span>
+                    </button>
+                    <span>|</span>
+                    <button
                       onClick={() => handleCopyToken(job.id)}
-                      className="text-xs text-espresso hover:text-espresso/80 font-medium flex items-center space-x-1"
+                      className="text-xs text-espresso dark:text-[#fafafa] hover:text-espresso/80 font-medium flex items-center space-x-1"
                     >
                       {copiedId === job.id ? (
                         <>
@@ -470,7 +565,7 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
                     <span>|</span>
                     <button
                       onClick={() => setExpandedJobId(isExpanded ? null : job.id)}
-                      className="text-xs text-warm-ash hover:text-aubergine-ink font-medium flex items-center space-x-1"
+                      className="text-xs text-warm-ash hover:text-aubergine-ink dark:hover:text-white font-medium flex items-center space-x-1"
                     >
                       <span>{isExpanded ? 'Hide Details' : 'View Specifications & Timeline'}</span>
                       {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -480,52 +575,61 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
 
                 {/* Expanded Details Drawer */}
                 {isExpanded && (
-                  <div className="p-4 sm:p-5 bg-paper-white border-t border-bone rounded-b-[20px] text-xs space-y-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="p-2.5 bg-linen border border-bone rounded-[12px]">
-                        <span className="text-warm-ash block text-[11px]">Paper & Media</span>
-                        <span className="font-semibold text-aubergine-ink capitalize">
-                          {job.paperSize} ({job.paperType === 'photo' ? 'Photo Paper' : 'Plain Paper'})
-                        </span>
-                      </div>
-                      <div className="p-2.5 bg-linen border border-bone rounded-[12px]">
-                        <span className="text-warm-ash block text-[11px]">Payment Method</span>
-                        <span className="font-semibold text-aubergine-ink capitalize">
-                          {job.paymentMethod === 'upi' ? 'UPI Online' : 'Pay at Counter'}
-                        </span>
-                      </div>
-                      <div className="p-2.5 bg-linen border border-bone rounded-[12px]">
-                        <span className="text-warm-ash block text-[11px]">Student Roll No.</span>
-                        <span className="font-semibold text-aubergine-ink">{job.studentRoll}</span>
-                      </div>
-                      <div className="p-2.5 bg-linen border border-bone rounded-[12px]">
-                        <span className="text-warm-ash block text-[11px]">File Size & Format</span>
-                        <span className="font-semibold text-aubergine-ink">{job.fileSize} (PDF)</span>
-                      </div>
-                    </div>
-
-                    {job.instructions && (
-                      <div className="p-3 bg-bone/40 border border-bone rounded-[12px]">
-                        <span className="font-semibold text-espresso block mb-0.5">Your Instructions to Operator:</span>
-                        <span className="text-aubergine-ink">{job.instructions}</span>
-                      </div>
-                    )}
-
-                    {/* Timeline History */}
-                    <div>
-                      <div className="font-semibold text-aubergine-ink mb-2">Order Activity Log</div>
-                      <div className="space-y-2 border-l-2 border-espresso pl-3 ml-1">
-                        {job.statusHistory.map((h, i) => (
-                          <div key={i} className="text-xs">
-                            <div className="flex items-center space-x-2">
-                              <span className="font-semibold text-aubergine-ink capitalize">{h.status}</span>
-                              <span className="text-[11px] text-stone">
-                                {new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                              </span>
-                            </div>
-                            {h.note && <div className="text-[11px] text-warm-ash">{h.note}</div>}
+                  <div className="p-4 sm:p-5 bg-paper-white dark:bg-[#16181d] border-t border-bone dark:border-white/10 rounded-b-[20px] text-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="md:col-span-2 space-y-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="p-2.5 bg-linen dark:bg-[#20232a] border border-bone dark:border-white/10 rounded-[12px]">
+                            <span className="text-warm-ash dark:text-[#a1a1aa] block text-[11px]">Paper & Media</span>
+                            <span className="font-semibold text-aubergine-ink dark:text-white capitalize">
+                              {job.paperSize} ({job.paperType === 'photo' ? 'Photo Paper' : 'Plain Paper'})
+                            </span>
                           </div>
-                        ))}
+                          <div className="p-2.5 bg-linen dark:bg-[#20232a] border border-bone dark:border-white/10 rounded-[12px]">
+                            <span className="text-warm-ash dark:text-[#a1a1aa] block text-[11px]">Payment Method</span>
+                            <span className="font-semibold text-aubergine-ink dark:text-white capitalize">
+                              {job.paymentMethod === 'upi' ? 'UPI Online' : 'Pay at Counter'}
+                            </span>
+                          </div>
+                          <div className="p-2.5 bg-linen dark:bg-[#20232a] border border-bone dark:border-white/10 rounded-[12px]">
+                            <span className="text-warm-ash dark:text-[#a1a1aa] block text-[11px]">Student Roll No.</span>
+                            <span className="font-semibold text-aubergine-ink dark:text-white">{job.studentRoll}</span>
+                          </div>
+                          <div className="p-2.5 bg-linen dark:bg-[#20232a] border border-bone dark:border-white/10 rounded-[12px]">
+                            <span className="text-warm-ash dark:text-[#a1a1aa] block text-[11px]">File Size & Format</span>
+                            <span className="font-semibold text-aubergine-ink dark:text-white">{job.fileSize} (PDF)</span>
+                          </div>
+                        </div>
+
+                        {job.instructions && (
+                          <div className="p-3 bg-bone/40 dark:bg-white/5 border border-bone dark:border-white/10 rounded-[12px]">
+                            <span className="font-semibold text-espresso dark:text-white block mb-0.5">Your Instructions to Operator:</span>
+                            <span className="text-aubergine-ink dark:text-[#a1a1aa]">{job.instructions}</span>
+                          </div>
+                        )}
+
+                        {/* Timeline History */}
+                        <div>
+                          <div className="font-semibold text-aubergine-ink dark:text-white mb-2">Order Activity Log</div>
+                          <div className="space-y-2 border-l-2 border-espresso dark:border-white/40 pl-3 ml-1">
+                            {job.statusHistory.map((h, i) => (
+                              <div key={i} className="text-xs">
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-semibold text-aubergine-ink dark:text-white capitalize">{h.status}</span>
+                                  <span className="text-[11px] text-stone dark:text-[#a1a1aa]">
+                                    {new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                  </span>
+                                </div>
+                                {h.note && <div className="text-[11px] text-warm-ash dark:text-[#a1a1aa]">{h.note}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Embedded QR Code Card */}
+                      <div className="md:col-span-1 flex flex-col items-center justify-center">
+                        <OrderQrCodeCard job={job} size="sm" showDetails={false} className="w-full max-w-[260px]" />
                       </div>
                     </div>
                   </div>
@@ -533,6 +637,28 @@ export const TrackPrinting: React.FC<TrackPrintingProps> = ({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* MODAL: Full Screen / Dedicated QR Pass for Display on Phone at Counter */}
+      {qrModalJob && (
+        <div
+          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+          onClick={() => setQrModalJob(null)}
+        >
+          <div
+            className="bg-paper-white dark:bg-[#16181d] ring-1 ring-black/[0.08] dark:ring-white/10 rounded-[26px] p-6 max-w-sm w-full shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setQrModalJob(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-full text-warm-ash hover:text-aubergine-ink dark:hover:text-white hover:bg-bone dark:hover:bg-white/10 transition-colors"
+              title="Close pass"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <OrderQrCodeCard job={qrModalJob} size="lg" showDetails={true} className="border-0 shadow-none p-0" />
+          </div>
         </div>
       )}
     </div>

@@ -1,14 +1,37 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('xeroxic_theme');
+          var theme = saved || 'dark';
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/png" href="/xeroxic-logo-cropped.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Xeroxic | College Xerox & Document Station</title>
     <!-- Editorial Linen & Ink Typography: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+      html.dark, html.dark body, html.dark #root {
+        background-color: #0c0d10 !important;
+        color: #f4f4f6 !important;
+      }
+      html:not(.dark), html:not(.dark) body, html:not(.dark) #root {
+        background-color: #f7f7f5 !important;
+        color: #1b0624 !important;
+      }
+    </style>
   </head>
   <body class="bg-linen text-aubergine-ink font-sans antialiased selection:bg-espresso selection:text-paper-white min-h-screen">
     <div id="root"></div>

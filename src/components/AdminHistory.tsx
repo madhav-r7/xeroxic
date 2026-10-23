@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PrintJob } from '../types';
-import { Search } from 'lucide-react';
+import { Search, PackageCheck } from 'lucide-react';
 
 interface AdminHistoryProps {
   jobs: PrintJob[];
@@ -22,7 +22,7 @@ export const AdminHistory: React.FC<AdminHistoryProps> = ({ jobs }) => {
   const totalRevenue = completedJobs.reduce((acc, j) => acc + j.cost, 0);
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 space-y-6">
+    <div className="w-full max-w-[1400px] mx-auto py-8 px-4 sm:px-6 lg:px-8 text-[1.03em] space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-aubergine-ink tracking-tight">
@@ -72,7 +72,7 @@ export const AdminHistory: React.FC<AdminHistoryProps> = ({ jobs }) => {
                 <th className="py-3 px-4 font-semibold">Assignment File</th>
                 <th className="py-3 px-4 font-semibold">Print Specifications</th>
                 <th className="py-3 px-4 font-semibold">Amount</th>
-                <th className="py-3 px-4 font-semibold">Completion Time</th>
+                <th className="py-3 px-4 font-semibold">Collection Status & Time</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-bone text-aubergine-ink">
@@ -94,11 +94,17 @@ export const AdminHistory: React.FC<AdminHistoryProps> = ({ jobs }) => {
                       {job.fileName}
                     </td>
                     <td className="py-3 px-4 text-warm-ash">
-                      {job.pageCount} pgs × {job.copies} set • {job.colorMode === 'color' ? 'Color' : 'B&W'} • {job.binding}
+                      {job.pageCount} pgs × {job.copies} set • {job.colorMode === 'color' ? 'Color' : 'B&W'} • {job.sides === 'double' ? 'Duplex' : 'Single'}
                     </td>
                     <td className="py-3 px-4 font-bold text-status-ready">₹{job.cost}.00</td>
-                    <td className="py-3 px-4 text-stone">
-                      {new Date(job.updatedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                    <td className="py-3 px-4">
+                      <div className="inline-flex items-center gap-1 font-semibold text-status-completed text-xs">
+                        <PackageCheck className="w-3.5 h-3.5 text-status-ready" />
+                        <span>Collected</span>
+                      </div>
+                      <div className="text-[11px] text-stone mt-0.5">
+                        {new Date(job.collectedAt || job.updatedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                      </div>
                     </td>
                   </tr>
                 ))

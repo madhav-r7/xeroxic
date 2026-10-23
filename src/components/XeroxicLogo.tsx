@@ -19,7 +19,7 @@ export const XeroxicLogo: React.FC<XeroxicLogoProps> = ({
       <img
         src="/xeroxic-logo-cropped.png"
         alt="Xeroxic Logo"
-        className={`${heightClass} w-auto object-contain mix-blend-multiply`}
+        className={`${heightClass} w-auto object-contain mix-blend-multiply dark:mix-blend-screen dark:invert dark:brightness-200 transition-all`}
         loading="eager"
       />
     </div>
